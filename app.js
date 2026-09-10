@@ -1,3 +1,4 @@
+document.getElementById("app").innerHTML = "<div style='padding:30px;color:white;font-size:30px'>RENIT TEST OK</div>";
 let supabase = null;
 
 if (window.supabase && window.RENIT_CONFIG) {
