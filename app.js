@@ -1,117 +1,164 @@
-const KEY="renit_demo_v1";
+let supabase = null;
 
-const seed=[
-{id:1,game:"BR MATCH",title:"BR Solo #001",fee:20,prize:150,slots:48,joined:12,time:"Today • 9:00 PM",status:"OPEN"},
-{id:2,game:"BR-DUO",title:"BR Duo Night",fee:30,prize:250,slots:24,joined:8,time:"Today • 10:00 PM",status:"OPEN"},
-{id:3,game:"FREE FIRE",title:"Free Fire Clash",fee:10,prize:100,slots:48,joined:31,time:"Tomorrow • 8:00 PM",status:"OPEN"},
-{id:4,game:"CS 4 VS 4",title:"CS Squad War",fee:50,prize:500,slots:16,joined:12,time:"Tomorrow • 10:00 PM",status:"OPEN"}
-];
-
-function load(){
-  return JSON.parse(localStorage.getItem(KEY)||"null")||{
-    matches:seed,
-    joined:[],
-    balance:40,
-    user:"Player"
-  };
-}
-
-function save(x){
-  localStorage.setItem(KEY,JSON.stringify(x));
-}
-
-let state=load();
-
-let supabase=null;
-
-if(window.supabase && window.RENIT_CONFIG){
-  supabase=window.supabase.createClient(
+if (window.supabase && window.RENIT_CONFIG) {
+  supabase = window.supabase.createClient(
     window.RENIT_CONFIG.supabaseUrl,
     window.RENIT_CONFIG.supabaseAnonKey
   );
   console.log("Supabase connected");
 }
 
-function toast(t){
-  let x=document.querySelector(".toast");
-  if(x)x.remove();
+const KEY = "renit_demo_v1";
 
-  x=document.createElement("div");
-  x.className="toast";
-  x.textContent=t;
-  document.body.append(x);
+const seed = [
+  {
+    id: 1,
+    game: "BR MATCH",
+    title: "BR Solo #001",
+    fee: 20,
+    prize: 150,
+    slots: 48,
+    joined: 12,
+    time: "Today • 9:00 PM",
+    status: "OPEN"
+  },
+  {
+    id: 2,
+    game: "BR-DUO",
+    title: "BR Duo Night",
+    fee: 30,
+    prize: 250,
+    slots: 24,
+    joined: 8,
+    time: "Today • 10:00 PM",
+    status: "OPEN"
+  },
+  {
+    id: 3,
+    game: "FREE FIRE",
+    title: "Free Fire Clash",
+    fee: 10,
+    prize: 100,
+    slots: 48,
+    joined: 31,
+    time: "Tomorrow • 8:00 PM",
+    status: "OPEN"
+  },
+  {
+    id: 4,
+    game: "CS 4 VS 4",
+    title: "CS Squad War",
+    fee: 50,
+    prize: 500,
+    slots: 16,
+    joined: 12,
+    time: "Tomorrow • 10:00 PM",
+    status: "OPEN"
+  }
+];
 
-  setTimeout(()=>x.remove(),1800);
+function load() {
+  return (
+    JSON.parse(localStorage.getItem(KEY) || "null") || {
+      matches: seed,
+      joined: [],
+      balance: 40,
+      user: "Player"
+    }
+  );
 }
 
-function esc(s){
-  return String(s).replace(/[&<>"']/g,m=>({
-    "&":"&amp;",
-    "<":"&lt;",
-    ">":"&gt;",
-    '"':"&quot;",
-    "'":"&#39;"
+function save(x) {
+  localStorage.setItem(KEY, JSON.stringify(x));
+}
+
+let state = load();
+
+function toast(t) {
+  let x = document.querySelector(".toast");
+  if (x) x.remove();
+
+  x = document.createElement("div");
+  x.className = "toast";
+  x.textContent = t;
+  document.body.append(x);
+
+  setTimeout(() => x.remove(), 1800);
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, m => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
   }[m]));
 }
 
-function home(){
-  document.getElementById("app").innerHTML=`
-  <div class="shell">
-    <header class="header">
-      <div class="logo">🎮</div>
-      <div class="brand">
-        <b>RENIT TOURNAMENT</b>
-        <small>Play • Compete • Win</small>
-      </div>
-      <button class="wallet" onclick="wallet()">৳ ${state.balance}</button>
-    </header>
-
-    <main>
-      <div class="hero">
-        <h1>Ready to compete?</h1>
-        <p>Join a match, play fair and win rewards.</p>
-
-        <div class="chips">
-          <button class="chip active" onclick="filter('ALL',this)">All</button>
-          <button class="chip" onclick="filter('BR MATCH',this)">BR</button>
-          <button class="chip" onclick="filter('BR-DUO',this)">Duo</button>
-          <button class="chip" onclick="filter('FREE FIRE',this)">Free Fire</button>
-          <button class="chip" onclick="filter('CS 4 VS 4',this)">CS</button>
+function home() {
+  document.getElementById("app").innerHTML = `
+    <div class="shell">
+      <header class="header">
+        <div class="logo">🎮</div>
+        <div class="brand">
+          <b>RENIT TOURNAMENT</b>
+          <small>Play • Compete • Win</small>
         </div>
-      </div>
+        <button class="wallet" onclick="wallet()">৳ ${state.balance}</button>
+      </header>
 
-      <div class="section">
-        <h2>Games</h2>
-        <button class="link" onclick="matches()">All Matches</button>
-      </div>
+      <main>
+        <div class="hero">
+          <h1>Ready to compete?</h1>
+          <p>Join a match, play fair and win rewards.</p>
 
-      <section class="grid">
-        ${games().map(g=>`
-          <article class="game" onclick="matches('${g}')">
-            ${g.includes("BR")||g.includes("FREE")?'<span class="badge">LIVE</span>':''}
-            <div>
-              <b>${g}</b>
-              <small>${state.matches.filter(m=>m.game===g).length} matches</small>
-            </div>
-          </article>
-        `).join("")}
-      </section>
+          <div class="chips">
+            <button class="chip active" onclick="filter('ALL',this)">All</button>
+            <button class="chip" onclick="filter('BR MATCH',this)">BR</button>
+            <button class="chip" onclick="filter('BR-DUO',this)">Duo</button>
+            <button class="chip" onclick="filter('FREE FIRE',this)">Free Fire</button>
+            <button class="chip" onclick="filter('CS 4 VS 4',this)">CS</button>
+          </div>
+        </div>
 
-      <div class="section">
-        <h2>Upcoming matches</h2>
-        <button class="link" onclick="matches()">View all</button>
-      </div>
+        <div class="section">
+          <h2>Games</h2>
+          <button class="link" onclick="matches()">All Matches</button>
+        </div>
 
-      <div id="homeMatches">
-        ${state.matches.slice(0,3).map(matchCard).join("")}
-      </div>
-    </main>
+        <section class="grid">
+          ${games().map(g => `
+            <article class="game" onclick="matches('${g}')">
+              ${
+                g.includes("BR") || g.includes("FREE")
+                  ? '<span class="badge">LIVE</span>'
+                  : ""
+              }
+              <div>
+                <b>${g}</b>
+                <small>${state.matches.filter(m => m.game === g).length} matches</small>
+              </div>
+            </article>
+          `).join("")}
+        </section>
 
-    ${nav("home")}
-  </div>`;
+        <div class="section">
+          <h2>Upcoming matches</h2>
+          <button class="link" onclick="matches()">View all</button>
+        </div>
+
+        <div id="homeMatches">
+          ${state.matches.slice(0, 3).map(matchCard).join("")}
+        </div>
+      </main>
+
+      ${nav("home")}
+    </div>
+  `;
 }
 
-function games(){
+function games() {
   return [
     "BR MATCH",
     "BR-DUO",
@@ -122,82 +169,83 @@ function games(){
   ];
 }
 
-function matchCard(m){
-  let full=m.joined>=m.slots;
+function matchCard(m) {
+  let full = m.joined >= m.slots;
 
   return `
-  <article class="match">
-    <div class="matchtop">
-      <h3>${esc(m.title)}</h3>
-      <span class="status">${full?"FULL":m.status}</span>
-    </div>
-
-    <p style="color:#9b94aa;margin-top:5px">
-      ${esc(m.game)} • ${esc(m.time)}
-    </p>
-
-    <div class="meta">
-      <div>
-        <span>Entry</span>
-        <b>৳${m.fee}</b>
+    <article class="match">
+      <div class="matchtop">
+        <h3>${esc(m.title)}</h3>
+        <span class="status">${full ? "FULL" : m.status}</span>
       </div>
 
-      <div>
-        <span>Prize</span>
-        <b>৳${m.prize}</b>
+      <p style="color:#9b94aa;margin-top:5px">
+        ${esc(m.game)} • ${esc(m.time)}
+      </p>
+
+      <div class="meta">
+        <div>
+          <span>Entry</span>
+          <b>৳${m.fee}</b>
+        </div>
+
+        <div>
+          <span>Prize</span>
+          <b>৳${m.prize}</b>
+        </div>
+
+        <div>
+          <span>Slots</span>
+          <b>${m.joined}/${m.slots}</b>
+        </div>
       </div>
 
-      <div>
-        <span>Slots</span>
-        <b>${m.joined}/${m.slots}</b>
-      </div>
-    </div>
-
-    <button class="join" onclick="details(${m.id})">
-      ${full?"Full":"View & Join"}
-    </button>
-  </article>`;
+      <button class="join" onclick="details(${m.id})">
+        ${full ? "Full" : "View & Join"}
+      </button>
+    </article>
+  `;
 }
 
-function matches(game="ALL"){
-  let list=state.matches.filter(
-    m=>game==="ALL"||m.game===game
+function matches(game = "ALL") {
+  let list = state.matches.filter(
+    m => game === "ALL" || m.game === game
   );
 
-  document.getElementById("app").innerHTML=`
-  <div class="shell">
+  document.getElementById("app").innerHTML = `
+    <div class="shell">
+      <header class="header">
+        <div class="logo">🎮</div>
+        <div class="brand">
+          <b>Matches</b>
+          <small>Choose your tournament</small>
+        </div>
+      </header>
 
-    <header class="header">
-      <div class="logo">🎮</div>
-      <div class="brand">
-        <b>Matches</b>
-        <small>Choose your tournament</small>
-      </div>
-    </header>
+      <main>
+        <div class="adminbar">
+          <button class="on">All</button>
+          <button onclick="matches('BR MATCH')">BR</button>
+          <button onclick="matches('BR-DUO')">Duo</button>
+          <button onclick="matches('FREE FIRE')">Free Fire</button>
+        </div>
 
-    <main>
-      <div class="adminbar">
-        <button class="on">All</button>
-        <button onclick="matches('BR MATCH')">BR</button>
-        <button onclick="matches('BR-DUO')">Duo</button>
-        <button onclick="matches('FREE FIRE')">Free Fire</button>
-      </div>
+        ${
+          list.length
+            ? list.map(matchCard).join("")
+            : '<div class="empty">No matches available.</div>'
+        }
+      </main>
 
-      ${
-        list.length
-        ?list.map(matchCard).join("")
-        :'<div class="empty">No matches available.</div>'
-      }
-    </main>
-
-    ${nav("matches")}
-  </div>`;
+      ${nav("matches")}
+    </div>
+  `;
 }
 
-function details(id){
-  let m=state.matches.find(x=>x.id===id);
+function details(id) {
+  let m = state.matches.find(x => x.id === id);
 
-  if(!m)return;
+  if (!m) return;
 
   openModal(`
     <button class="close" onclick="closeModal()">✕</button>
@@ -232,24 +280,24 @@ function details(id){
     </p>
 
     <button class="primary" onclick="joinMatch(${m.id})">
-      ${m.joined>=m.slots?"Full":"Join for ৳"+m.fee}
+      ${m.joined >= m.slots ? "Full" : "Join for ৳" + m.fee}
     </button>
   `);
 }
 
-function joinMatch(id){
-  let m=state.matches.find(x=>x.id===id);
+function joinMatch(id) {
+  let m = state.matches.find(x => x.id === id);
 
-  if(state.joined.includes(id))
+  if (state.joined.includes(id))
     return toast("Already joined");
 
-  if(state.balance<m.fee)
+  if (state.balance < m.fee)
     return toast("Not enough balance");
 
-  if(m.joined>=m.slots)
+  if (m.joined >= m.slots)
     return toast("Match is full");
 
-  state.balance-=m.fee;
+  state.balance -= m.fee;
   m.joined++;
   state.joined.push(id);
 
@@ -260,84 +308,90 @@ function joinMatch(id){
   home();
 }
 
-function results(){
-  document.getElementById("app").innerHTML=`
-  <div class="shell">
+function results() {
+  document.getElementById("app").innerHTML = `
+    <div class="shell">
+      <header class="header">
+        <div class="logo">🏆</div>
+        <div class="brand">
+          <b>Results</b>
+          <small>Recent tournament results</small>
+        </div>
+      </header>
 
-    <header class="header">
-      <div class="logo">🏆</div>
-      <div class="brand">
-        <b>Results</b>
-        <small>Recent tournament results</small>
-      </div>
-    </header>
+      <main>
+        <div class="empty">
+          Results will appear here after the admin publishes winners.
+        </div>
+      </main>
 
-    <main>
-      <div class="empty">
-        Results will appear here after the admin publishes winners.
-      </div>
-    </main>
-
-    ${nav("results")}
-  </div>`;
+      ${nav("results")}
+    </div>
+  `;
 }
 
-function profile(){
-  document.getElementById("app").innerHTML=`
-  <div class="shell">
+function profile() {
+  document.getElementById("app").innerHTML = `
+    <div class="shell">
+      <header class="header">
+        <div class="logo">👤</div>
 
-    <header class="header">
-      <div class="logo">👤</div>
+        <div class="brand">
+          <b>${esc(state.user)}</b>
+          <small>Player profile</small>
+        </div>
+      </header>
 
-      <div class="brand">
-        <b>${esc(state.user)}</b>
-        <small>Player profile</small>
-      </div>
-    </header>
+      <main>
+        <div class="hero">
+          <h1>৳ ${state.balance}</h1>
+          <p>Wallet balance</p>
 
-    <main>
+          <button class="primary" onclick="wallet()">
+            Wallet
+          </button>
+        </div>
 
-      <div class="hero">
-        <h1>৳ ${state.balance}</h1>
-        <p>Wallet balance</p>
+        <div class="section">
+          <h2>My matches</h2>
+        </div>
 
-        <button class="primary" onclick="wallet()">
-          Wallet
-        </button>
-      </div>
+        ${
+          state.joined.length
+            ? state.joined
+                .map(id => matchCard(
+                  state.matches.find(m => m.id === id)
+                ))
+                .join("")
+            : '<div class="empty">You have not joined any match yet.</div>'
+        }
+      </main>
 
-      <div class="section">
-        <h2>My matches</h2>
-      </div>
-
-      ${
-        state.joined.length
-        ?state.joined.map(id=>{
-          let m=state.matches.find(x=>x.id===id);
-          return m?matchCard(m):"";
-        }).join("")
-        :'<div class="empty">You have not joined any match yet.</div>'
-      }
-
-    </main>
-
-    ${nav("profile")}
-  </div>`;
+      ${nav("profile")}
+    </div>
+  `;
 }
 
-function wallet(){
+function wallet() {
   openModal(`
     <button class="close" onclick="closeModal()">✕</button>
 
     <h2>Wallet</h2>
 
     <p style="margin:12px 0;color:#b9b1c3">
-      Demo balance:
-      <b>৳${state.balance}</b>
+      Demo balance: <b>৳${state.balance}</b>
     </p>
 
-    <button class="primary"
-      onclick="state.balance+=50;save(state);closeModal();toast('৳50 demo balance added');profile()">
+    <button
+      class="primary"
+      onclick="
+        state.balance+=50;
+        save(state);
+        closeModal();
+        toast('৳50 demo balance added');
+        profile()
+      "
+    >
       Add ৳50 (Demo)
     </button>
 
@@ -347,61 +401,79 @@ function wallet(){
   `);
 }
 
-function filter(g,b){
-  document.querySelectorAll(".chip")
-    .forEach(x=>x.classList.remove("active"));
+function filter(g, b) {
+  document
+    .querySelectorAll(".chip")
+    .forEach(x => x.classList.remove("active"));
 
   b.classList.add("active");
 
-  let list=state.matches.filter(
-    m=>g==="ALL"||m.game===g
+  let list = state.matches.filter(
+    m => g === "ALL" || m.game === g
   );
 
-  document.getElementById("homeMatches").innerHTML=
+  document.getElementById("homeMatches").innerHTML =
     list.length
-    ?list.map(matchCard).join("")
-    :'<div class="empty">No matches.</div>';
+      ? list.map(matchCard).join("")
+      : '<div class="empty">No matches.</div>';
 }
 
-function nav(active){
+function nav(active) {
   return `
-  <nav class="nav">
+    <nav class="nav">
 
-    <button class="${active==="home"?"active":""}" onclick="home()">
-      <i>⌂</i>Home
-    </button>
+      <button
+        class="${active === "home" ? "active" : ""}"
+        onclick="home()"
+      >
+        <i>⌂</i>Home
+      </button>
 
-    <button class="${active==="matches"?"active":""}" onclick="matches()">
-      <i>🎮</i>Matches
-    </button>
+      <button
+        class="${active === "matches" ? "active" : ""}"
+        onclick="matches()"
+      >
+        <i>🎮</i>Matches
+      </button>
 
-    <button class="${active==="results"?"active":""}" onclick="results()">
-      <i>🏆</i>Results
-    </button>
+      <button
+        class="${active === "results" ? "active" : ""}"
+        onclick="results()"
+      >
+        <i>🏆</i>Results
+      </button>
 
-    <button class="${active==="profile"?"active":""}" onclick="profile()">
-      <i>👤</i>Profile
-    </button>
+      <button
+        class="${active === "profile" ? "active" : ""}"
+        onclick="profile()"
+      >
+        <i>👤</i>Profile
+      </button>
 
-  </nav>`;
+    </nav>
+  `;
 }
 
-function openModal(html){
-  let x=document.createElement("div");
+function openModal(html) {
+  let x = document.createElement("div");
 
-  x.className="modal";
-  x.id="modal";
+  x.className = "modal";
+  x.id = "modal";
 
-  x.innerHTML=`<div class="sheet">${html}</div>`;
+  x.innerHTML = `
+    <div class="sheet">
+      ${html}
+    </div>
+  `;
 
   document.body.append(x);
 }
 
-function closeModal(){
+function closeModal() {
   document.getElementById("modal")?.remove();
 }
 
-function admin(){
+function admin() {
   openModal(`
     <button class="close" onclick="closeModal()">✕</button>
 
@@ -414,6 +486,7 @@ function admin(){
 
     <div class="field">
       <label>Game</label>
+
       <select id="ag">
         <option>BR MATCH</option>
         <option>BR-DUO</option>
@@ -453,17 +526,17 @@ function admin(){
   `);
 }
 
-function addMatch(){
-  let m={
-    id:Date.now(),
-    game:ag.value,
-    title:at.value||"New Match",
-    fee:+af.value||0,
-    prize:+ap.value||0,
-    slots:+as.value||1,
-    joined:0,
-    time:ax.value,
-    status:"OPEN"
+function addMatch() {
+  let m = {
+    id: Date.now(),
+    game: ag.value,
+    title: at.value || "New Match",
+    fee: +af.value || 0,
+    prize: +ap.value || 0,
+    slots: +as.value || 1,
+    joined: 0,
+    time: ax.value,
+    status: "OPEN"
   };
 
   state.matches.unshift(m);
@@ -475,8 +548,8 @@ function addMatch(){
   matches();
 }
 
-document.addEventListener("keydown",e=>{
-  if(e.key==="Escape")closeModal();
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") closeModal();
 });
 
 home();
