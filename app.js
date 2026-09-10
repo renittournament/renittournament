@@ -8,12 +8,15 @@ const seed=[
 function load(){return JSON.parse(localStorage.getItem(KEY)||"null")||{matches:seed,joined:[],balance:40,user:"Player"}}
 function save(x){localStorage.setItem(KEY,JSON.stringify(x))}
 let state=load();
-const supabase = window.supabase.createClient(
-  window.RENIT_CONFIG.supabaseUrl,
-  window.RENIT_CONFIG.supabaseAnonKey
-);
+let supabase = null;
 
-console.log("Supabase connected");
+if (window.supabase && window.RENIT_CONFIG) {
+  supabase = window.supabase.createClient(
+    window.RENIT_CONFIG.supabaseUrl,
+    window.RENIT_CONFIG.supabaseAnonKey
+  );
+  console.log("Supabase connected");
+}
 function toast(t){let x=document.querySelector(".toast");if(x)x.remove();x=document.createElement("div");x.className="toast";x.textContent=t;document.body.append(x);setTimeout(()=>x.remove(),1800)}
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function home(){
