@@ -1,4 +1,4 @@
-const KEY = "renit_tournament_v1";
+const KEY = "renit_tournament_v2";
 
 const seedMatches = [
   {
@@ -44,10 +44,32 @@ const seedMatches = [
     joined: 12,
     time: "Tomorrow • 10:00 PM",
     status: "OPEN"
+  },
+  {
+    id: 5,
+    game: "LONE WOLF",
+    title: "Lone Wolf Challenge",
+    fee: 15,
+    prize: 120,
+    slots: 24,
+    joined: 5,
+    time: "Tomorrow • 9:00 PM",
+    status: "OPEN"
+  },
+  {
+    id: 6,
+    game: "SPECIAL MATCH",
+    title: "Special Night Cup",
+    fee: 25,
+    prize: 300,
+    slots: 32,
+    joined: 10,
+    time: "Friday • 10:00 PM",
+    status: "OPEN"
   }
 ];
 
-function getState() {
+function loadState() {
   try {
     const saved = localStorage.getItem(KEY);
 
@@ -55,7 +77,7 @@ function getState() {
       return JSON.parse(saved);
     }
   } catch (error) {
-    console.log("Storage error:", error);
+    console.log(error);
   }
 
   return {
@@ -66,15 +88,11 @@ function getState() {
   };
 }
 
-function saveState() {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(state));
-  } catch (error) {
-    console.log("Save error:", error);
-  }
-}
+let state = loadState();
 
-let state = getState();
+function saveState() {
+  localStorage.setItem(KEY, JSON.stringify(state));
+}
 
 function esc(value) {
   return String(value).replace(/[&<>"']/g, function (char) {
@@ -89,16 +107,15 @@ function esc(value) {
 }
 
 function toast(message) {
-  const oldToast = document.querySelector(".toast");
+  const old = document.querySelector(".toast");
 
-  if (oldToast) {
-    oldToast.remove();
+  if (old) {
+    old.remove();
   }
 
   const box = document.createElement("div");
 
   box.className = "toast";
-
   box.textContent = message;
 
   document.body.appendChild(box);
@@ -108,7 +125,7 @@ function toast(message) {
   }, 1800);
 }
 
-function games() {
+function getGames() {
   return [
     "BR MATCH",
     "BR-DUO",
@@ -158,7 +175,7 @@ function matchCard(match) {
 
       <button
         class="join"
-        onclick="details(${match.id})"
+        onclick="openMatch(${match.id})"
       >
         ${full ? "Full" : "View & Join"}
       </button>
@@ -166,6 +183,10 @@ function matchCard(match) {
     </article>
   `;
 }
+
+/* =========================
+   HOME
+========================= */
 
 function home() {
   document.getElementById("app").innerHTML = `
@@ -183,7 +204,7 @@ function home() {
 
         <button
           class="wallet"
-          onclick="wallet()"
+          onclick="openWallet()"
         >
           ৳ ${state.balance}
         </button>
@@ -204,35 +225,35 @@ function home() {
 
             <button
               class="chip active"
-              onclick="filterMatches('ALL', this)"
+              onclick="filterHome('ALL', this)"
             >
               All
             </button>
 
             <button
               class="chip"
-              onclick="filterMatches('BR MATCH', this)"
+              onclick="filterHome('BR MATCH', this)"
             >
               BR
             </button>
 
             <button
               class="chip"
-              onclick="filterMatches('BR-DUO', this)"
+              onclick="filterHome('BR-DUO', this)"
             >
               Duo
             </button>
 
             <button
               class="chip"
-              onclick="filterMatches('FREE FIRE', this)"
+              onclick="filterHome('FREE FIRE', this)"
             >
               Free Fire
             </button>
 
             <button
               class="chip"
-              onclick="filterMatches('CS 4 VS 4', this)"
+              onclick="filterHome('CS 4 VS 4', this)"
             >
               CS
             </button>
@@ -247,7 +268,7 @@ function home() {
 
           <button
             class="link"
-            onclick="matches()"
+            onclick="showMatches()"
           >
             All Matches
           </button>
@@ -256,7 +277,7 @@ function home() {
 
         <section class="grid">
 
-          ${games().map(function (game) {
+          ${getGames().map(function (game) {
 
             const count = state.matches.filter(function (m) {
               return m.game === game;
@@ -265,12 +286,13 @@ function home() {
             return `
               <article
                 class="game"
-                onclick="matches('${game}')"
+                onclick="showMatches('${game}')"
               >
 
                 ${
-                  game.includes("BR") ||
-                  game.includes("FREE")
+                  game === "BR MATCH" ||
+                  game === "BR-DUO" ||
+                  game === "FREE FIRE"
                     ? '<span class="badge">LIVE</span>'
                     : ""
                 }
@@ -293,7 +315,7 @@ function home() {
 
           <button
             class="link"
-            onclick="matches()"
+            onclick="showMatches()"
           >
             View all
           </button>
@@ -311,18 +333,25 @@ function home() {
 
       </main>
 
-      ${nav("home")}
+      ${navigation("home")}
 
     </div>
   `;
 }
 
-function matches(game) {
+/* =========================
+   MATCHES
+========================= */
 
-  game = game || "ALL";
+function showMatches(game) {
+
+  const selectedGame = game || "ALL";
 
   const list = state.matches.filter(function (match) {
-    return game === "ALL" || match.game === game;
+    return (
+      selectedGame === "ALL" ||
+      match.game === selectedGame
+    );
   });
 
   document.getElementById("app").innerHTML = `
@@ -334,9 +363,21 @@ function matches(game) {
         <div class="logo">🎮</div>
 
         <div class="brand">
+
           <b>Matches</b>
-          <small>Choose your tournament</small>
+
+          <small>
+            Choose your tournament
+          </small>
+
         </div>
+
+        <button
+          class="wallet"
+          onclick="openWallet()"
+        >
+          ৳ ${state.balance}
+        </button>
 
       </header>
 
@@ -344,25 +385,51 @@ function matches(game) {
 
         <div class="adminbar">
 
-          <button onclick="matches('ALL')">
+          <button
+            onclick="showMatches()"
+          >
             All
           </button>
 
-          <button onclick="matches('BR MATCH')">
+          <button
+            onclick="showMatches('BR MATCH')"
+          >
             BR
           </button>
 
-          <button onclick="matches('BR-DUO')">
+          <button
+            onclick="showMatches('BR-DUO')"
+          >
             Duo
           </button>
 
-          <button onclick="matches('FREE FIRE')">
+          <button
+            onclick="showMatches('FREE FIRE')"
+          >
             Free Fire
           </button>
 
-          <button onclick="matches('CS 4 VS 4')">
+          <button
+            onclick="showMatches('CS 4 VS 4')"
+          >
             CS
           </button>
+
+          <button
+            onclick="showMatches('LONE WOLF')"
+          >
+            Lone Wolf
+          </button>
+
+        </div>
+
+        <div style="margin-bottom:20px">
+
+          ${
+            selectedGame === "ALL"
+              ? "<h2>All Matches</h2>"
+              : `<h2>${esc(selectedGame)}</h2>`
+          }
 
         </div>
 
@@ -378,13 +445,17 @@ function matches(game) {
 
       </main>
 
-      ${nav("matches")}
+      ${navigation("matches")}
 
     </div>
   `;
 }
 
-function details(id) {
+/* =========================
+   MATCH DETAILS
+========================= */
+
+function openMatch(id) {
 
   const match = state.matches.find(function (item) {
     return item.id === id;
@@ -395,8 +466,11 @@ function details(id) {
     return;
   }
 
-  const alreadyJoined = state.joined.includes(id);
-  const full = match.joined >= match.slots;
+  const alreadyJoined =
+    state.joined.includes(id);
+
+  const full =
+    match.joined >= match.slots;
 
   openModal(`
 
@@ -407,7 +481,9 @@ function details(id) {
       ✕
     </button>
 
-    <h2>${esc(match.title)}</h2>
+    <h2>
+      ${esc(match.title)}
+    </h2>
 
     <p style="color:#9b94aa;margin-top:6px">
       ${esc(match.game)} • ${esc(match.time)}
@@ -432,18 +508,24 @@ function details(id) {
 
     </div>
 
-    <p style="color:#c8c0d2;line-height:1.6">
+    <p style="
+      color:#c8c0d2;
+      line-height:1.6;
+    ">
 
       Join this tournament using your wallet.
-      Room information will be published by the admin
-      when the match is ready.
+      Room information will be published by
+      the admin when the match is ready.
 
     </p>
 
     ${
       alreadyJoined
         ? `
-          <button class="primary" disabled>
+          <button
+            class="primary"
+            disabled
+          >
             Already Joined
           </button>
         `
@@ -451,14 +533,23 @@ function details(id) {
           <button
             class="primary"
             onclick="joinMatch(${match.id})"
+            ${full ? "disabled" : ""}
           >
-            ${full ? "Match Full" : "Join for ৳" + match.fee}
+            ${
+              full
+                ? "Match Full"
+                : "Join for ৳" + match.fee
+            }
           </button>
         `
     }
 
   `);
 }
+
+/* =========================
+   JOIN
+========================= */
 
 function joinMatch(id) {
 
@@ -501,7 +592,11 @@ function joinMatch(id) {
   home();
 }
 
-function results() {
+/* =========================
+   RESULTS
+========================= */
+
+function showResults() {
 
   document.getElementById("app").innerHTML = `
 
@@ -529,19 +624,25 @@ function results() {
 
       </main>
 
-      ${nav("results")}
+      ${navigation("results")}
 
     </div>
   `;
 }
 
-function profile() {
+/* =========================
+   PROFILE
+========================= */
+
+function showProfile() {
 
   const joinedMatches = state.joined
     .map(function (id) {
+
       return state.matches.find(function (match) {
         return match.id === id;
       });
+
     })
     .filter(Boolean);
 
@@ -579,7 +680,7 @@ function profile() {
 
           <button
             class="primary"
-            onclick="wallet()"
+            onclick="openWallet()"
           >
             Wallet
           </button>
@@ -587,7 +688,9 @@ function profile() {
         </div>
 
         <div class="section">
+
           <h2>My matches</h2>
+
         </div>
 
         ${
@@ -602,13 +705,17 @@ function profile() {
 
       </main>
 
-      ${nav("profile")}
+      ${navigation("profile")}
 
     </div>
   `;
 }
 
-function wallet() {
+/* =========================
+   WALLET
+========================= */
+
+function openWallet() {
 
   openModal(`
 
@@ -621,7 +728,10 @@ function wallet() {
 
     <h2>Wallet</h2>
 
-    <p style="margin:12px 0;color:#b9b1c3">
+    <p style="
+      margin:12px 0;
+      color:#b9b1c3;
+    ">
 
       Current balance:
 
@@ -633,7 +743,7 @@ function wallet() {
 
     <button
       class="primary"
-      onclick="addDemoBalance()"
+      onclick="addDemoMoney()"
     >
       Add ৳50 Demo
     </button>
@@ -643,15 +753,17 @@ function wallet() {
       font-size:12px;
       margin-top:10px;
     ">
+
       Demo wallet only.
-      Real bKash/Nagad payment will be connected
-      after the backend and payment gateway are ready.
+      Real bKash/Nagad payment will be
+      connected later.
+
     </p>
 
   `);
 }
 
-function addDemoBalance() {
+function addDemoMoney() {
 
   state.balance += 50;
 
@@ -661,10 +773,14 @@ function addDemoBalance() {
 
   toast("৳50 demo balance added");
 
-  profile();
+  showProfile();
 }
 
-function filterMatches(game, button) {
+/* =========================
+   HOME FILTER
+========================= */
+
+function filterHome(game, button) {
 
   document
     .querySelectorAll(".chip")
@@ -677,7 +793,10 @@ function filterMatches(game, button) {
   }
 
   const list = state.matches.filter(function (match) {
-    return game === "ALL" || match.game === game;
+    return (
+      game === "ALL" ||
+      match.game === game
+    );
   });
 
   const container =
@@ -696,7 +815,11 @@ function filterMatches(game, button) {
     `;
 }
 
-function nav(active) {
+/* =========================
+   NAVIGATION
+========================= */
+
+function navigation(active) {
 
   return `
 
@@ -712,7 +835,7 @@ function nav(active) {
 
       <button
         class="${active === "matches" ? "active" : ""}"
-        onclick="matches()"
+        onclick="showMatches()"
       >
         <i>🎮</i>
         Matches
@@ -720,7 +843,7 @@ function nav(active) {
 
       <button
         class="${active === "results" ? "active" : ""}"
-        onclick="results()"
+        onclick="showResults()"
       >
         <i>🏆</i>
         Results
@@ -728,7 +851,7 @@ function nav(active) {
 
       <button
         class="${active === "profile" ? "active" : ""}"
-        onclick="profile()"
+        onclick="showProfile()"
       >
         <i>👤</i>
         Profile
@@ -738,14 +861,18 @@ function nav(active) {
   `;
 }
 
+/* =========================
+   MODAL
+========================= */
+
 function openModal(html) {
 
   closeModal();
 
-  const modal = document.createElement("div");
+  const modal =
+    document.createElement("div");
 
   modal.className = "modal";
-
   modal.id = "modal";
 
   modal.innerHTML = `
@@ -767,161 +894,9 @@ function closeModal() {
   }
 }
 
-function admin() {
-
-  openModal(`
-
-    <button
-      class="close"
-      onclick="closeModal()"
-    >
-      ✕
-    </button>
-
-    <h2>Admin Demo</h2>
-
-    <p style="color:#9b94aa;margin:8px 0 14px">
-
-      Local demo admin panel.
-      Real admin authentication will be added later.
-
-    </p>
-
-    <div class="field">
-
-      <label>Game</label>
-
-      <select id="adminGame">
-
-        <option>BR MATCH</option>
-        <option>BR-DUO</option>
-        <option>FREE FIRE</option>
-        <option>CS 4 VS 4</option>
-
-      </select>
-
-    </div>
-
-    <div class="field">
-
-      <label>Match title</label>
-
-      <input
-        id="adminTitle"
-        placeholder="BR Solo #002"
-      >
-
-    </div>
-
-    <div class="field">
-
-      <label>Entry fee</label>
-
-      <input
-        id="adminFee"
-        type="number"
-        value="20"
-      >
-
-    </div>
-
-    <div class="field">
-
-      <label>Prize</label>
-
-      <input
-        id="adminPrize"
-        type="number"
-        value="150"
-      >
-
-    </div>
-
-    <div class="field">
-
-      <label>Slots</label>
-
-      <input
-        id="adminSlots"
-        type="number"
-        value="48"
-      >
-
-    </div>
-
-    <div class="field">
-
-      <label>Time</label>
-
-      <input
-        id="adminTime"
-        value="Today • 11:00 PM"
-      >
-
-    </div>
-
-    <button
-      class="primary"
-      onclick="addMatch()"
-    >
-      Create Match
-    </button>
-
-  `);
-}
-
-function addMatch() {
-
-  const game =
-    document.getElementById("adminGame").value;
-
-  const title =
-    document.getElementById("adminTitle").value;
-
-  const fee =
-    Number(document.getElementById("adminFee").value) || 0;
-
-  const prize =
-    Number(document.getElementById("adminPrize").value) || 0;
-
-  const slots =
-    Number(document.getElementById("adminSlots").value) || 1;
-
-  const time =
-    document.getElementById("adminTime").value;
-
-  const match = {
-
-    id: Date.now(),
-
-    game: game,
-
-    title: title || "New Match",
-
-    fee: fee,
-
-    prize: prize,
-
-    slots: slots,
-
-    joined: 0,
-
-    time: time || "Upcoming",
-
-    status: "OPEN"
-
-  };
-
-  state.matches.unshift(match);
-
-  saveState();
-
-  closeModal();
-
-  toast("Match created");
-
-  matches();
-}
+/* =========================
+   KEYBOARD
+========================= */
 
 document.addEventListener(
   "keydown",
@@ -934,5 +909,8 @@ document.addEventListener(
   }
 );
 
-/* Start application */
+/* =========================
+   START
+========================= */
+
 home();
