@@ -1,3 +1,124 @@
+let currentUser = null;
+
+async function checkAuth() {
+  const { data } = await supabaseClient.auth.getSession();
+
+  if (data.session) {
+    currentUser = data.session.user;
+    showAuthenticatedApp();
+  } else {
+    showLogin();
+  }
+}
+
+function showLogin() {
+  document.getElementById("app").innerHTML = `
+    <div class="shell">
+      <main>
+        <div class="hero" style="margin-top:60px">
+          <h1>🎮 RENIT TOURNAMENT</h1>
+          <p>Login or create your account to continue.</p>
+        </div>
+
+        <div class="match">
+          <h2>Login</h2>
+
+          <input
+            id="authEmail"
+            type="email"
+            placeholder="Email"
+            style="width:100%;padding:14px;margin:10px 0;border-radius:10px;border:1px solid #333;background:#17131d;color:white"
+          >
+
+          <input
+            id="authPassword"
+            type="password"
+            placeholder="Password"
+            style="width:100%;padding:14px;margin:10px 0;border-radius:10px;border:1px solid #333;background:#17131d;color:white"
+          >
+
+          <button class="primary" onclick="loginUser()">
+            Login
+          </button>
+
+          <button
+            class="primary"
+            onclick="signupUser()"
+            style="margin-top:10px"
+          >
+            Create Account
+          </button>
+
+          <p style="color:#8f879d;font-size:12px;margin-top:15px">
+            Use a valid email address and password.
+          </p>
+        </div>
+      </main>
+    </div>
+  `;
+}
+
+async function loginUser() {
+  const email = document.getElementById("authEmail").value.trim();
+  const password = document.getElementById("authPassword").value;
+
+  if (!email || !password) {
+    alert("Please enter email and password.");
+    return;
+  }
+
+  const { data, error } =
+    await supabaseClient.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  currentUser = data.user;
+  showAuthenticatedApp();
+}
+
+async function signupUser() {
+  const email = document.getElementById("authEmail").value.trim();
+  const password = document.getElementById("authPassword").value;
+
+  if (!email || !password) {
+    alert("Please enter email and password.");
+    return;
+  }
+
+  if (password.length < 6) {
+    alert("Password must be at least 6 characters.");
+    return;
+  }
+
+  const { data, error } =
+    await supabaseClient.auth.signUp({
+      email: email,
+      password: password
+    });
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  if (data.user && !data.session) {
+    alert("Account created. Please check your email to confirm your account.");
+    return;
+  }
+
+  currentUser = data.user;
+  showAuthenticatedApp();
+}
+
+function showAuthenticatedApp() {
+  home();
+}
 const KEY = "renit_tournament_v2";
 
 /* =========================================================
