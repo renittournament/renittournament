@@ -1128,7 +1128,15 @@ async function loadTransactionHistory() {
         font-size:11px;
         margin-top:5px;
       ">
-        ${esc(t.created_at || "")}
+        $${t.created_at ? new Date(t.created_at).toLocaleString("en-US", {
+  timeZone: "Asia/Dhaka",
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+  hour12: true
+}) : "-"}
       </div>
     </div>
   `).join("");
