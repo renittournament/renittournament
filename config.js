@@ -9,3 +9,5 @@ const supabaseClient =
     SUPABASE_URL,
     SUPABASE_KEY
   );
+
+window.supabaseClient = supabaseClient;
