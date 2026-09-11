@@ -505,7 +505,16 @@ function tournamentSlots(t) {
     0
   );
 }
+function tournamentStartTime(t) {
+  if (!t.start_time) return "-";
 
+  return new Date(t.start_time).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  });
+}
 async function showMatches() {
   const matches = await getTournaments();
 
@@ -605,6 +614,7 @@ function matchCard(t) {
         <div>Slots: ${esc(slots)}</div>
         <div>Status: ${esc(t.status || "upcoming")}</div>
       </div>
+      <div>Start: ${esc(tournamentStartTime(t))}</div>
 
       ${primaryBtn(
         "View & Join",
