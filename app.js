@@ -1764,6 +1764,7 @@ async function approveDeposit(requestId) {
 }
 window.openAdmin = openAdmin;
 window.openWallet = openWallet;
+window.publishTournamentRoom = publishTournamentRoom;
 window.submitDepositRequest = submitDepositRequest;
 window.showProfile = showProfile;
 window.login = login;
