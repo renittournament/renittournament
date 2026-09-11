@@ -1579,7 +1579,6 @@ async function publishTournamentRoom() {
 }
   await loadAdminDepositRequests();
 }
-await loadRoomTournaments();
 async function createTournament() {
   if (!(await isAdmin())) {
     alert("Admin access denied.");
