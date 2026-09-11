@@ -1578,6 +1578,7 @@ async function publishTournamentRoom() {
   document.getElementById("roomPasswordInput").value = "";
 }
   await loadAdminDepositRequests();
+await loadRoomTournaments();
 }
 async function createTournament() {
   if (!(await isAdmin())) {
