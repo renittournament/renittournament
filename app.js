@@ -1174,6 +1174,161 @@ async function openAdmin() {
         border-radius:14px;
         padding:16px;
       ">
+        <h3 style="margin-top:0;">Create Tournament</h3>
+
+        <input
+          id="tournamentTitle"
+          type="text"
+          placeholder="Tournament title"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #293346;
+            border-radius:10px;
+            padding:13px;
+            margin-top:10px;
+            outline:none;
+          "
+        >
+
+        <select
+          id="tournamentGame"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #293346;
+            border-radius:10px;
+            padding:13px;
+            margin-top:10px;
+            outline:none;
+          "
+        >
+          <option value="BR MATCH">BR MATCH</option>
+          <option value="BR-DUO">BR-DUO</option>
+          <option value="FREE FIRE">FREE FIRE</option>
+          <option value="CS 4 VS 4">CS 4 VS 4</option>
+          <option value="LONE WOLF">LONE WOLF</option>
+          <option value="SPECIAL MATCH">SPECIAL MATCH</option>
+          <option value="CUSTOM 2VS2 HEADSHOOT">CUSTOM 2VS2 HEADSHOOT</option>
+          <option value="LONE WOLF HEADSHOOT">LONE WOLF HEADSHOOT</option>
+          <option value="LOST TO WIN">LOST TO WIN</option>
+          <option value="FREE MATCH">FREE MATCH</option>
+        </select>
+
+        <input
+          id="tournamentMode"
+          type="text"
+          value="Solo"
+          placeholder="Mode"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #293346;
+            border-radius:10px;
+            padding:13px;
+            margin-top:10px;
+            outline:none;
+          "
+        >
+
+        <input
+          id="tournamentEntryFee"
+          type="number"
+          min="0"
+          placeholder="Entry fee"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #293346;
+            border-radius:10px;
+            padding:13px;
+            margin-top:10px;
+            outline:none;
+          "
+        >
+
+        <input
+          id="tournamentPrizePool"
+          type="number"
+          min="0"
+          placeholder="Prize pool"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #293346;
+            border-radius:10px;
+            padding:13px;
+            margin-top:10px;
+            outline:none;
+          "
+        >
+
+        <input
+          id="tournamentMaxPlayers"
+          type="number"
+          min="1"
+          placeholder="Maximum players"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #293346;
+            border-radius:10px;
+            padding:13px;
+            margin-top:10px;
+            outline:none;
+          "
+        >
+
+        <input
+          id="tournamentStartTime"
+          type="datetime-local"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #293346;
+            border-radius:10px;
+            padding:13px;
+            margin-top:10px;
+            outline:none;
+          "
+        >
+
+        ${primaryBtn(
+          "Create Tournament",
+          "createTournament()"
+        )}
+
+        <div
+          id="createTournamentMessage"
+          style="
+            margin-top:12px;
+            color:#9ba6b8;
+            font-size:13px;
+          "
+        ></div>
+      </div>
+
+      <div style="
+        margin-top:15px;
+        background:#101521;
+        border:1px solid #202838;
+        border-radius:14px;
+        padding:16px;
+      ">
         <h3 style="margin-top:0;">Deposit Requests</h3>
 
         <div id="adminDepositRequests">
@@ -1185,7 +1340,85 @@ async function openAdmin() {
 
   await loadAdminDepositRequests();
 }
+async function createTournament() {
+  if (!(await isAdmin())) {
+    alert("Admin access denied.");
+    return;
+  }
 
+  const title =
+    document.getElementById("tournamentTitle").value.trim();
+
+  const game =
+    document.getElementById("tournamentGame").value;
+
+  const mode =
+    document.getElementById("tournamentMode").value.trim() || "Solo";
+
+  const entryFee =
+    Number(document.getElementById("tournamentEntryFee").value);
+
+  const prizePool =
+    Number(document.getElementById("tournamentPrizePool").value);
+
+  const maxPlayers =
+    Number(document.getElementById("tournamentMaxPlayers").value);
+
+  const startTime =
+    document.getElementById("tournamentStartTime").value;
+
+  const message =
+    document.getElementById("createTournamentMessage");
+
+  if (!title) {
+    message.textContent = "Tournament title দিন।";
+    return;
+  }
+
+  if (entryFee < 0 || prizePool < 0) {
+    message.textContent = "Fee বা prize negative হতে পারবে না।";
+    return;
+  }
+
+  if (!maxPlayers || maxPlayers <= 0) {
+    message.textContent = "Maximum players দিন।";
+    return;
+  }
+
+  message.textContent = "Tournament তৈরি হচ্ছে...";
+
+  const { data, error } = await db.rpc(
+    "create_tournament",
+    {
+      p_title: title,
+      p_game: game,
+      p_mode: mode,
+      p_entry_fee: entryFee,
+      p_prize_pool: prizePool,
+      p_max_players: maxPlayers,
+      p_start_time: startTime
+        ? new Date(startTime).toISOString()
+        : null,
+      p_status: "upcoming"
+    }
+  );
+
+  if (error) {
+    console.log(error);
+    message.textContent =
+      "Tournament তৈরি করা যায়নি: " + error.message;
+    return;
+  }
+
+  message.textContent =
+    `Tournament created successfully! ID: ${data}`;
+
+  document.getElementById("tournamentTitle").value = "";
+  document.getElementById("tournamentEntryFee").value = "";
+  document.getElementById("tournamentPrizePool").value = "";
+  document.getElementById("tournamentMaxPlayers").value = "";
+  document.getElementById("tournamentStartTime").value = "";
+}
 async function loadAdminDepositRequests() {
   const box = document.getElementById("adminDepositRequests");
   if (!box) return;
