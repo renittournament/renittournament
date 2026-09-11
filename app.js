@@ -760,6 +760,114 @@ async function showResults() {
   `);
 }
 
+async function submitDepositRequest() {
+  if (!currentUser) {
+    loginPage();
+    return;
+  }
+
+  const method = document.getElementById("depositMethod").value;
+  const amount = Number(document.getElementById("depositAmount").value);
+  const transactionId =
+    document.getElementById("depositTransactionId").value.trim();
+  const msg = document.getElementById("depositMessage");
+
+  if (!amount || amount < 10) {
+    msg.textContent = "Minimum deposit ৳10.";
+    return;
+  }
+
+  if (!transactionId) {
+    msg.textContent = "Transaction ID দিন।";
+    return;
+  }
+
+  msg.textContent = "Request submit হচ্ছে...";
+
+  const { error } = await db
+    .from("payment_requests")
+    .insert({
+      user_id: currentUser.id,
+      method: method,
+      amount: amount,
+      transaction_id: transactionId,
+      status: "pending"
+    });
+
+  if (error) {
+    console.log(error);
+    msg.textContent = "Request submit করা যায়নি: " + error.message;
+    return;
+  }
+
+  msg.textContent =
+    "Deposit request submitted. Admin approval-এর অপেক্ষায় আছে।";
+
+  document.getElementById("depositAmount").value = "";
+  document.getElementById("depositTransactionId").value = "";
+
+  loadDepositRequests();
+}
+
+async function loadDepositRequests() {
+  if (!currentUser) return;
+
+  const box = document.getElementById("depositRequests");
+  if (!box) return;
+
+  const { data, error } = await db
+    .from("payment_requests")
+    .select("*")
+    .eq("user_id", currentUser.id)
+    .order("created_at", { ascending: false })
+    .limit(5);
+
+  if (error) {
+    box.innerHTML =
+      `<div style="color:#ff7185;">Request history load করা যায়নি.</div>`;
+    return;
+  }
+
+  if (!data?.length) {
+    box.innerHTML =
+      `<div style="color:#8f9bb0;">এখনো কোনো deposit request নেই।</div>`;
+    return;
+  }
+
+  box.innerHTML = data.map(r => `
+    <div style="
+      background:#111722;
+      border:1px solid #293346;
+      border-radius:12px;
+      padding:13px;
+      margin-top:10px;
+    ">
+      <div>
+        <b>${esc(r.method || "-")}</b>
+        <span style="float:right;">
+          ৳${esc(r.amount ?? 0)}
+        </span>
+      </div>
+
+      <div style="
+        color:#8f9bb0;
+        font-size:12px;
+        margin-top:7px;
+      ">
+        TxID: ${esc(r.transaction_id || "-")}
+      </div>
+
+      <div style="
+        color:#f0b44d;
+        font-size:12px;
+        margin-top:6px;
+      ">
+        Status: ${esc(r.status || "pending")}
+      </div>
+    </div>
+  `).join("");
+}
+
 async function openWallet() {
   currentProfile = await loadProfile();
 
@@ -792,14 +900,96 @@ async function openWallet() {
         border:1px solid #202838;
         border-radius:14px;
         padding:16px;
-        color:#9ba6b8;
-        line-height:1.6;
       ">
-        Deposit / withdrawal system এখনো payment gateway-এর সাথে
-        connect করা হয়নি।
+        <h3 style="margin-top:0;">Deposit</h3>
+
+        <div style="
+          color:#9ba6b8;
+          font-size:13px;
+          line-height:1.5;
+        ">
+          bKash অথবা Nagad দিয়ে payment করার পর
+          Transaction ID এখানে submit করুন।
+        </div>
+
+        <select id="depositMethod" style="
+          width:100%;
+          box-sizing:border-box;
+          background:#111722;
+          color:white;
+          border:1px solid #293346;
+          border-radius:10px;
+          padding:13px;
+          margin-top:12px;
+        ">
+          <option value="bKash">bKash</option>
+          <option value="Nagad">Nagad</option>
+        </select>
+
+        <input
+          id="depositAmount"
+          type="number"
+          min="10"
+          placeholder="Deposit amount"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #293346;
+            border-radius:10px;
+            padding:13px;
+            margin-top:10px;
+            outline:none;
+          "
+        >
+
+        <input
+          id="depositTransactionId"
+          type="text"
+          placeholder="Transaction ID"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #293346;
+            border-radius:10px;
+            padding:13px;
+            margin-top:10px;
+            outline:none;
+          "
+        >
+
+        ${primaryBtn(
+          "Submit Deposit Request",
+          "submitDepositRequest()"
+        )}
+
+        <div id="depositMessage" style="
+          margin-top:12px;
+          color:#9ba6b8;
+          font-size:13px;
+          line-height:1.5;
+        "></div>
+      </div>
+
+      <div style="
+        margin-top:15px;
+        background:#101521;
+        border:1px solid #202838;
+        border-radius:14px;
+        padding:16px;
+      ">
+        <h3 style="margin-top:0;">Deposit Requests</h3>
+        <div id="depositRequests">
+          Loading...
+        </div>
       </div>
     </main>
   `);
+
+  await loadDepositRequests();
 }
 
 async function showProfile() {
