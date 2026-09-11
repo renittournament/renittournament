@@ -1,24 +1,11 @@
-/* =========================================================
+/* =========================================
    RENIT TOURNAMENT
-   Supabase Auth + Profiles
-   ========================================================= */
+   Supabase Auth + Tournament Frontend
+   ========================================= */
 
-const supabaseClient = window.supabaseClient;
+const APP_KEY = "renit_tournament_v3";
 
-/* ---------- App State ---------- */
-
-let state = {
-  user: null,
-  profile: null,
-  matches: []
-};
-
-/* ---------- Demo Match Data ----------
-   Tournament database connect করার আগ পর্যন্ত
-   এগুলো frontend-এর match display data।
---------------------------------------------------------- */
-
-const seedMatches = [
+const matches = [
   {
     id: 1,
     game: "BR MATCH",
@@ -131,40 +118,118 @@ const seedMatches = [
   }
 ];
 
-state.matches = seedMatches;
+
+/* =========================================
+   SAFE SUPABASE CHECK
+   ========================================= */
+
+function getSupabase() {
+  if (
+    typeof window === "undefined" ||
+    !window.supabase ||
+    typeof window.supabase.createClient !== "function"
+  ) {
+    return null;
+  }
+
+  if (
+    typeof SUPABASE_URL === "undefined" ||
+    typeof SUPABASE_KEY === "undefined"
+  ) {
+    return null;
+  }
+
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    return null;
+  }
+
+  try {
+    if (!window.__renitSupabase) {
+      window.__renitSupabase =
+        window.supabase.createClient(
+          SUPABASE_URL,
+          SUPABASE_KEY
+        );
+    }
+
+    return window.__renitSupabase;
+  } catch (error) {
+    console.error("Supabase error:", error);
+    return null;
+  }
+}
+
+const supabaseClient = getSupabase();
 
 
-/* =========================================================
+/* =========================================
+   LOCAL STATE
+   ========================================= */
+
+function loadLocalState() {
+  try {
+    const saved = localStorage.getItem(APP_KEY);
+
+    if (saved) {
+      const data = JSON.parse(saved);
+
+      return {
+        balance:
+          typeof data.balance === "number"
+            ? data.balance
+            : 0,
+
+        joined:
+          Array.isArray(data.joined)
+            ? data.joined
+            : []
+      };
+    }
+  } catch (error) {
+    console.log("Local state error:", error);
+  }
+
+  return {
+    balance: 0,
+    joined: []
+  };
+}
+
+let state = loadLocalState();
+
+function saveLocalState() {
+  try {
+    localStorage.setItem(
+      APP_KEY,
+      JSON.stringify(state)
+    );
+  } catch (error) {
+    console.log("Save error:", error);
+  }
+}
+
+
+/* =========================================
    HELPERS
-   ========================================================= */
+   ========================================= */
 
 function esc(value) {
-  return String(value ?? "").replace(/[&<>"']/g, function (char) {
-    return {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;"
-    }[char];
-  });
+  return String(value).replace(
+    /[&<>"']/g,
+    function (char) {
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[char];
+    }
+  );
 }
 
-function money(value) {
-  const number = Number(value || 0);
-  return "৳" + number.toFixed(2);
-}
-
-function username() {
-  if (state.profile && state.profile.username) {
-    return state.profile.username;
-  }
-
-  if (state.user && state.user.email) {
-    return state.user.email.split("@")[0];
-  }
-
-  return "Player";
+function app() {
+  return document.getElementById("app");
 }
 
 function toast(message) {
@@ -189,413 +254,528 @@ function toast(message) {
 }
 
 
-/* =========================================================
+/* =========================================
+   AUTH
+   ========================================= */
+
+let currentUser = null;
+
+async function getCurrentUser() {
+  if (!supabaseClient) {
+    return null;
+  }
+
+  try {
+    const result =
+      await supabaseClient.auth.getUser();
+
+    if (result.error) {
+      console.log(
+        "User check:",
+        result.error.message
+      );
+
+      return null;
+    }
+
+    return result.data.user || null;
+
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+
+/* =========================================
    PROFILE
-   ========================================================= */
+   ========================================= */
 
-async function loadProfile() {
-  if (!state.user) {
-    state.profile = null;
+async function createProfile(user, username) {
+  if (!supabaseClient || !user) {
     return;
   }
 
-  const { data, error } = await supabaseClient
-    .from("Profiles")
-    .select("id, username, email, balance, created_at")
-    .eq("id", state.user.id)
-    .maybeSingle();
-
-  if (error) {
-    console.error("Profile load error:", error);
-    toast("Profile load failed");
-    return;
-  }
-
-  state.profile = data;
-
-  /*
-    যদি কোনো কারণে Profile row না থাকে,
-    তাহলে manually create করার চেষ্টা করবে।
-  */
-
-  if (!state.profile) {
-    const newProfile = {
-      id: state.user.id,
-      username: state.user.email
-        ? state.user.email.split("@")[0]
-        : "Player",
-      email: state.user.email || "",
-      balance: 0
-    };
-
-    const { data: created, error: createError } =
+  try {
+    const { data: existing, error: findError } =
       await supabaseClient
         .from("Profiles")
-        .insert(newProfile)
-        .select()
-        .single();
+        .select("id, username")
+        .eq("id", user.id)
+        .maybeSingle();
 
-    if (createError) {
-      console.error("Profile create error:", createError);
-      toast("Could not create profile");
+    if (findError) {
+      console.log(
+        "Profile check:",
+        findError.message
+      );
+    }
+
+    if (existing) {
       return;
     }
 
-    state.profile = created;
-  }
-}
+    const safeUsername =
+      username ||
+      user.email
+        ?.split("@")[0]
+        ?.replace(/[^a-zA-Z0-9_]/g, "")
+        ?.slice(0, 20) ||
+      "Player";
 
+    const { error } =
+      await supabaseClient
+        .from("Profiles")
+        .insert({
+          id: user.id,
+          username: safeUsername
+        });
 
-/* =========================================================
-   AUTH
-   ========================================================= */
-
-function showAuth() {
-  document.getElementById("app").innerHTML = `
-    <div class="shell auth-shell">
-
-      <div class="auth-hero">
-        <div class="auth-logo">🎮</div>
-
-        <h1>RENIT TOURNAMENT</h1>
-
-        <p>
-          Login or create your account to continue.
-        </p>
-      </div>
-
-      <div class="auth-card">
-
-        <h2>Login</h2>
-
-        <input
-          id="authEmail"
-          class="auth-input"
-          type="email"
-          placeholder="Email"
-          autocomplete="email"
-        >
-
-        <input
-          id="authPassword"
-          class="auth-input"
-          type="password"
-          placeholder="Password"
-          autocomplete="current-password"
-        >
-
-        <button
-          class="primary"
-          onclick="loginUser()"
-        >
-          Login
-        </button>
-
-        <button
-          class="primary"
-          onclick="createAccount()"
-        >
-          Create Account
-        </button>
-
-        <p class="auth-help">
-          Use a valid email address and password.
-        </p>
-
-      </div>
-
-    </div>
-  `;
-}
-
-
-async function loginUser() {
-  const emailInput = document.getElementById("authEmail");
-  const passwordInput = document.getElementById("authPassword");
-
-  const email = emailInput
-    ? emailInput.value.trim()
-    : "";
-
-  const password = passwordInput
-    ? passwordInput.value
-    : "";
-
-  if (!email || !password) {
-    toast("Email and password required");
-    return;
-  }
-
-  if (!email.includes("@")) {
-    toast("Enter a valid email");
-    return;
-  }
-
-  const button = document.querySelector(".auth-card .primary");
-
-  if (button) {
-    button.disabled = true;
-    button.textContent = "Logging in...";
-  }
-
-  const { data, error } =
-    await supabaseClient.auth.signInWithPassword({
-      email: email,
-      password: password
-    });
-
-  if (error) {
-    console.error("Login error:", error);
-
-    if (button) {
-      button.disabled = false;
-      button.textContent = "Login";
+    if (error) {
+      console.log(
+        "Profile creation:",
+        error.message
+      );
     }
 
-    toast(error.message);
-    return;
+  } catch (error) {
+    console.log(
+      "Profile error:",
+      error
+    );
   }
-
-  state.user = data.user;
-
-  await loadProfile();
-
-  toast("Login successful!");
-
-  home();
 }
 
 
-async function createAccount() {
-  const emailInput = document.getElementById("authEmail");
-  const passwordInput = document.getElementById("authPassword");
+/* =========================================
+   LOGIN PAGE
+   ========================================= */
 
-  const email = emailInput
-    ? emailInput.value.trim()
-    : "";
+function showAuth() {
+  app().innerHTML = `
+    <div class="shell">
+      <main>
 
-  const password = passwordInput
-    ? passwordInput.value
-    : "";
-
-  if (!email || !password) {
-    toast("Email and password required");
-    return;
-  }
-
-  if (!email.includes("@")) {
-    toast("Enter a valid email");
-    return;
-  }
-
-  if (password.length < 6) {
-    toast("Password must be at least 6 characters");
-    return;
-  }
-
-  const buttons = document.querySelectorAll(
-    ".auth-card .primary"
-  );
-
-  buttons.forEach(function (button) {
-    button.disabled = true;
-  });
-
-  const { data, error } =
-    await supabaseClient.auth.signUp({
-      email: email,
-      password: password
-    });
-
-  if (error) {
-    console.error("Signup error:", error);
-
-    buttons.forEach(function (button) {
-      button.disabled = false;
-    });
-
-    toast(error.message);
-    return;
-  }
-
-  /*
-    Email confirmation ON থাকলে Supabase session immediately
-    নাও দিতে পারে।
-  */
-
-  if (!data.session) {
-    document.getElementById("app").innerHTML = `
-      <div class="shell">
-
-        <div class="auth-card success-card">
-
-          <div style="font-size:52px">
-            📧
+        <div class="hero" style="
+          margin-top:70px;
+          text-align:center;
+          padding:35px 20px;
+        ">
+          <div style="
+            font-size:50px;
+            margin-bottom:10px;
+          ">
+            🎮
           </div>
 
-          <h2>Account Created</h2>
+          <h1 style="
+            font-size:32px;
+            margin-bottom:8px;
+          ">
+            RENIT TOURNAMENT
+          </h1>
 
           <p>
-            We sent a confirmation email to:
+            Login or create your account to continue.
           </p>
+        </div>
 
-          <strong>
-            ${esc(email)}
-          </strong>
 
-          <p class="auth-help">
-            Please open your email and confirm
-            your account. Then come back and login.
-          </p>
+        <div class="card" style="
+          margin-top:20px;
+          padding:25px;
+        ">
+
+          <h2 id="authTitle">
+            Login
+          </h2>
+
+
+          <div id="usernameBox" style="
+            display:none;
+            margin-top:18px;
+          ">
+            <input
+              id="username"
+              type="text"
+              placeholder="Username"
+              autocomplete="username"
+              style="
+                width:100%;
+                box-sizing:border-box;
+              "
+            >
+          </div>
+
+
+          <div style="margin-top:18px;">
+            <input
+              id="email"
+              type="email"
+              placeholder="Email"
+              autocomplete="email"
+              style="
+                width:100%;
+                box-sizing:border-box;
+              "
+            >
+          </div>
+
+
+          <div style="margin-top:14px;">
+            <input
+              id="password"
+              type="password"
+              placeholder="Password"
+              autocomplete="current-password"
+              style="
+                width:100%;
+                box-sizing:border-box;
+              "
+            >
+          </div>
+
 
           <button
+            id="authButton"
             class="primary"
-            onclick="showAuth()"
+            onclick="loginUser()"
+            style="
+              width:100%;
+              margin-top:18px;
+            "
           >
-            Back to Login
+            Login
           </button>
 
+
+          <button
+            id="switchButton"
+            class="join"
+            onclick="switchAuthMode()"
+            style="
+              width:100%;
+              margin-top:12px;
+            "
+          >
+            Create Account
+          </button>
+
+
+          <p
+            id="authMessage"
+            style="
+              margin-top:15px;
+              color:#9b94aa;
+              line-height:1.5;
+            "
+          >
+            Use a valid email address and password.
+          </p>
+
         </div>
 
-      </div>
+      </main>
+    </div>
+  `;
+
+  window.authMode = "login";
+}
+
+
+function switchAuthMode() {
+  window.authMode =
+    window.authMode === "login"
+      ? "signup"
+      : "login";
+
+  const title =
+    document.getElementById("authTitle");
+
+  const button =
+    document.getElementById("authButton");
+
+  const switchButton =
+    document.getElementById("switchButton");
+
+  const usernameBox =
+    document.getElementById("usernameBox");
+
+  const message =
+    document.getElementById("authMessage");
+
+  if (window.authMode === "signup") {
+
+    title.textContent = "Create Account";
+
+    button.textContent = "Create Account";
+
+    button.onclick = signupUser;
+
+    switchButton.textContent = "Back to Login";
+
+    usernameBox.style.display = "block";
+
+    message.textContent =
+      "Create your RENIT Tournament player account.";
+
+  } else {
+
+    title.textContent = "Login";
+
+    button.textContent = "Login";
+
+    button.onclick = loginUser;
+
+    switchButton.textContent = "Create Account";
+
+    usernameBox.style.display = "none";
+
+    message.textContent =
+      "Use a valid email address and password.";
+  }
+}
+
+
+/* =========================================
+   SIGN UP
+   ========================================= */
+
+async function signupUser() {
+
+  const email =
+    document.getElementById("email")
+      ?.value
+      .trim();
+
+  const password =
+    document.getElementById("password")
+      ?.value;
+
+  const username =
+    document.getElementById("username")
+      ?.value
+      .trim();
+
+  const message =
+    document.getElementById("authMessage");
+
+
+  if (!supabaseClient) {
+    message.textContent =
+      "Supabase connection is not available.";
+
+    return;
+  }
+
+
+  if (!username) {
+    message.textContent =
+      "Please enter a username.";
+
+    return;
+  }
+
+
+  if (!email) {
+    message.textContent =
+      "Please enter your email.";
+
+    return;
+  }
+
+
+  if (!password || password.length < 6) {
+    message.textContent =
+      "Password must be at least 6 characters.";
+
+    return;
+  }
+
+
+  message.textContent =
+    "Creating your account...";
+
+
+  try {
+
+    const { data, error } =
+      await supabaseClient.auth.signUp({
+        email: email,
+        password: password
+      });
+
+
+    if (error) {
+      console.error(error);
+
+      message.textContent =
+        error.message;
+
+      return;
+    }
+
+
+    if (!data.user) {
+      message.textContent =
+        "Account could not be created.";
+
+      return;
+    }
+
+
+    /*
+      If email confirmation is OFF,
+      session will exist immediately.
+    */
+
+    if (data.session) {
+
+      currentUser = data.user;
+
+      await createProfile(
+        data.user,
+        username
+      );
+
+      toast("Account created successfully!");
+
+      await startApp();
+
+      return;
+    }
+
+
+    /*
+      Email confirmation is ON.
+    */
+
+    message.innerHTML = `
+      <b style="color:#fff;">
+        Account created successfully.
+      </b>
+      <br><br>
+      Please check your email and confirm
+      your account.
+      <br><br>
+      After confirmation, come back and Login.
     `;
 
+  } catch (error) {
+
+    console.error(error);
+
+    message.textContent =
+      "Something went wrong. Please try again.";
+  }
+}
+
+
+/* =========================================
+   LOGIN
+   ========================================= */
+
+async function loginUser() {
+
+  const email =
+    document.getElementById("email")
+      ?.value
+      .trim();
+
+  const password =
+    document.getElementById("password")
+      ?.value;
+
+  const message =
+    document.getElementById("authMessage");
+
+
+  if (!supabaseClient) {
+    message.textContent =
+      "Supabase connection is not available.";
+
     return;
   }
 
-  state.user = data.user;
 
-  await loadProfile();
+  if (!email || !password) {
+    message.textContent =
+      "Please enter email and password.";
 
-  toast("Account created!");
-
-  home();
-}
-
-
-async function logoutUser() {
-  const { error } =
-    await supabaseClient.auth.signOut();
-
-  if (error) {
-    console.error("Logout error:", error);
-    toast("Logout failed");
     return;
   }
 
-  state.user = null;
-  state.profile = null;
 
-  showAuth();
+  message.textContent =
+    "Logging in...";
+
+
+  try {
+
+    const { data, error } =
+      await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+
+    if (error) {
+
+      console.error(error);
+
+      message.textContent =
+        error.message;
+
+      return;
+    }
+
+
+    if (!data.user) {
+
+      message.textContent =
+        "Login failed.";
+
+      return;
+    }
+
+
+    currentUser = data.user;
+
+
+    await createProfile(
+      data.user,
+      data.user.email
+        ?.split("@")[0]
+    );
+
+
+    toast("Login successful!");
+
+    await startApp();
+
+  } catch (error) {
+
+    console.error(error);
+
+    message.textContent =
+      "Login failed. Please try again.";
+  }
 }
 
 
-/* =========================================================
-   GAMES
-   ========================================================= */
-
-function getGames() {
-  return [
-    "BR MATCH",
-    "BR-DUO",
-    "FREE FIRE",
-    "CS 4 VS 4",
-    "LONE WOLF",
-    "SPECIAL MATCH",
-    "CUSTOM 2VS2 HEADSHOOT",
-    "LONE WOLF HEADSHOOT",
-    "LOST TO WIN",
-    "FREE MATCH"
-  ];
-}
-
-
-/* =========================================================
-   MATCH CARD
-   ========================================================= */
-
-function matchCard(match) {
-  const full =
-    Number(match.joined) >= Number(match.slots);
-
-  return `
-    <article class="match">
-
-      <div class="matchtop">
-
-        <h3>
-          ${esc(match.title)}
-        </h3>
-
-        <span class="status">
-          ${full ? "FULL" : esc(match.status)}
-        </span>
-
-      </div>
-
-      <p style="color:#9b94aa;margin-top:5px">
-        ${esc(match.game)}
-        •
-        ${esc(match.time)}
-      </p>
-
-      <div class="meta">
-
-        <div>
-          <span>Entry</span>
-          <b>
-            ${
-              Number(match.fee) === 0
-                ? "FREE"
-                : "৳" + Number(match.fee)
-            }
-          </b>
-        </div>
-
-        <div>
-          <span>Prize</span>
-          <b>
-            ৳${Number(match.prize)}
-          </b>
-        </div>
-
-        <div>
-          <span>Slots</span>
-          <b>
-            ${Number(match.joined)}/${Number(match.slots)}
-          </b>
-        </div>
-
-      </div>
-
-      <button
-        class="join"
-        onclick="openMatch(${match.id})"
-        ${full ? "disabled" : ""}
-      >
-        ${full ? "Full" : "View & Join"}
-      </button>
-
-    </article>
-  `;
-}
-
-
-/* =========================================================
+/* =========================================
    HOME
-   ========================================================= */
+   ========================================= */
 
 function home() {
-  if (!state.user) {
-    showAuth();
-    return;
-  }
 
-  const balance = state.profile
-    ? Number(state.profile.balance || 0)
-    : 0;
+  const userName =
+    currentUser?.email
+      ?.split("@")[0] ||
+    "Player";
 
-  document.getElementById("app").innerHTML = `
+
+  app().innerHTML = `
     <div class="shell">
 
       <header class="header">
@@ -605,25 +785,21 @@ function home() {
         </div>
 
         <div class="brand">
-
-          <b>
-            RENIT TOURNAMENT
-          </b>
-
+          <b>RENIT TOURNAMENT</b>
           <small>
             Play • Compete • Win
           </small>
-
         </div>
 
         <button
           class="wallet"
           onclick="openWallet()"
         >
-          ৳ ${balance.toFixed(2)}
+          ৳ ${state.balance}
         </button>
 
       </header>
+
 
       <main>
 
@@ -634,7 +810,7 @@ function home() {
           </h1>
 
           <p>
-            Join a match, play fair and win rewards.
+            Welcome, ${esc(userName)}
           </p>
 
           <div class="chips">
@@ -701,7 +877,7 @@ function home() {
             .map(function (game) {
 
               const count =
-                state.matches.filter(function (match) {
+                matches.filter(function (match) {
                   return match.game === game;
                 }).length;
 
@@ -711,17 +887,7 @@ function home() {
                   onclick="showMatches('${esc(game)}')"
                 >
 
-                  ${
-                    game === "BR MATCH" ||
-                    game === "BR-DUO" ||
-                    game === "FREE FIRE" ||
-                    game === "CUSTOM 2VS2 HEADSHOOT"
-                      ? '<span class="badge">LIVE</span>'
-                      : ""
-                  }
-
                   <div>
-
                     <b>
                       ${esc(game)}
                     </b>
@@ -730,11 +896,11 @@ function home() {
                       ${count}
                       ${count === 1 ? "match" : "matches"}
                     </small>
-
                   </div>
 
                 </article>
               `;
+
             })
             .join("")}
 
@@ -744,7 +910,7 @@ function home() {
         <div class="section">
 
           <h2>
-            Upcoming matches
+            Upcoming Matches
           </h2>
 
           <button
@@ -759,14 +925,27 @@ function home() {
 
         <div id="homeMatches">
 
-          ${state.matches
+          ${matches
             .slice(0, 3)
             .map(matchCard)
             .join("")}
 
         </div>
 
+
+        <button
+          class="join"
+          onclick="logoutUser()"
+          style="
+            width:100%;
+            margin-top:25px;
+          "
+        >
+          Logout
+        </button>
+
       </main>
+
 
       ${navigation("home")}
 
@@ -775,26 +954,159 @@ function home() {
 }
 
 
-/* =========================================================
+/* =========================================
+   GAMES
+   ========================================= */
+
+function getGames() {
+
+  return [
+    "BR MATCH",
+    "BR-DUO",
+    "FREE FIRE",
+    "CS 4 VS 4",
+    "LONE WOLF",
+    "SPECIAL MATCH",
+    "CUSTOM 2VS2 HEADSHOOT",
+    "LONE WOLF HEADSHOOT",
+    "LOST TO WIN",
+    "FREE MATCH"
+  ];
+
+}
+
+
+/* =========================================
+   MATCH CARD
+   ========================================= */
+
+function matchCard(match) {
+
+  const full =
+    match.joined >= match.slots;
+
+  const alreadyJoined =
+    state.joined.includes(match.id);
+
+
+  return `
+    <article class="match">
+
+      <div class="matchtop">
+
+        <h3>
+          ${esc(match.title)}
+        </h3>
+
+        <span class="status">
+          ${
+            full
+              ? "FULL"
+              : esc(match.status)
+          }
+        </span>
+
+      </div>
+
+
+      <p style="
+        color:#9b94aa;
+        margin-top:5px;
+      ">
+        ${esc(match.game)}
+        •
+        ${esc(match.time)}
+      </p>
+
+
+      <div class="meta">
+
+        <div>
+          <span>
+            Entry
+          </span>
+
+          <b>
+            ${
+              match.fee === 0
+                ? "FREE"
+                : "৳" + match.fee
+            }
+          </b>
+        </div>
+
+
+        <div>
+          <span>
+            Prize
+          </span>
+
+          <b>
+            ৳${match.prize}
+          </b>
+        </div>
+
+
+        <div>
+          <span>
+            Slots
+          </span>
+
+          <b>
+            ${match.joined}/${match.slots}
+          </b>
+        </div>
+
+      </div>
+
+
+      <button
+        class="join"
+        onclick="openMatch(${match.id})"
+        ${
+          full
+            ? "disabled"
+            : ""
+        }
+      >
+
+        ${
+          full
+            ? "Full"
+            : alreadyJoined
+            ? "Joined"
+            : "View & Join"
+        }
+
+      </button>
+
+    </article>
+  `;
+}
+
+
+/* =========================================
    MATCHES
-   ========================================================= */
+   ========================================= */
 
 function showMatches(game) {
-  if (!state.user) {
-    showAuth();
-    return;
-  }
 
-  const selectedGame = game || "ALL";
+  const selected =
+    game || "ALL";
 
-  const list = state.matches.filter(function (match) {
-    return (
-      selectedGame === "ALL" ||
-      match.game === selectedGame
-    );
-  });
 
-  document.getElementById("app").innerHTML = `
+  const list =
+    matches.filter(function (match) {
+
+      return (
+        selected === "ALL" ||
+        match.game === selected
+      );
+
+    });
+
+
+  app().innerHTML = `
     <div class="shell">
 
       <header class="header">
@@ -819,11 +1131,7 @@ function showMatches(game) {
           class="wallet"
           onclick="openWallet()"
         >
-          ৳ ${
-            state.profile
-              ? Number(state.profile.balance || 0).toFixed(2)
-              : "0.00"
-          }
+          ৳ ${state.balance}
         </button>
 
       </header>
@@ -880,26 +1188,29 @@ function showMatches(game) {
         </div>
 
 
-        <div style="margin-bottom:20px">
-
+        <h2 style="margin-bottom:20px;">
           ${
-            selectedGame === "ALL"
-              ? "<h2>All Matches</h2>"
-              : `<h2>${esc(selectedGame)}</h2>`
+            selected === "ALL"
+              ? "All Matches"
+              : esc(selected)
           }
-
-        </div>
+        </h2>
 
 
         ${
           list.length
-            ? list.map(matchCard).join("")
-            : `<div class="empty">
+            ? list
+                .map(matchCard)
+                .join("")
+            : `
+              <div class="empty">
                 No matches available.
-              </div>`
+              </div>
+            `
         }
 
       </main>
+
 
       ${navigation("matches")}
 
@@ -908,28 +1219,32 @@ function showMatches(game) {
 }
 
 
-/* =========================================================
-   MATCH DETAILS
-   ========================================================= */
+/* =========================================
+   OPEN MATCH
+   ========================================= */
 
 function openMatch(id) {
-  const match = state.matches.find(function (item) {
-    return item.id === id;
-  });
+
+  const match =
+    matches.find(function (item) {
+      return item.id === id;
+    });
+
 
   if (!match) {
+
     toast("Match not found");
+
     return;
   }
 
-  const balance = state.profile
-    ? Number(state.profile.balance || 0)
-    : 0;
 
-  const full =
-    Number(match.joined) >= Number(match.slots);
+  const joined =
+    state.joined.includes(id);
+
 
   openModal(`
+
     <button
       class="close"
       onclick="closeModal()"
@@ -937,83 +1252,84 @@ function openMatch(id) {
       ✕
     </button>
 
+
     <h2>
       ${esc(match.title)}
     </h2>
 
-    <p style="color:#9b94aa;margin-top:6px">
+
+    <p style="
+      color:#9b94aa;
+      margin-top:6px;
+    ">
       ${esc(match.game)}
       •
       ${esc(match.time)}
     </p>
 
+
     <div class="meta">
 
       <div>
-        <span>Entry</span>
+        <span>
+          Entry
+        </span>
+
         <b>
           ${
-            Number(match.fee) === 0
+            match.fee === 0
               ? "FREE"
-              : "৳" + Number(match.fee)
+              : "৳" + match.fee
           }
         </b>
       </div>
 
+
       <div>
-        <span>Prize</span>
+        <span>
+          Prize
+        </span>
+
         <b>
-          ৳${Number(match.prize)}
+          ৳${match.prize}
         </b>
       </div>
 
+
       <div>
-        <span>Players</span>
+        <span>
+          Players
+        </span>
+
         <b>
-          ${Number(match.joined)}/${Number(match.slots)}
+          ${match.joined}/${match.slots}
         </b>
       </div>
 
     </div>
 
-    <p style="color:#c8c0d2;line-height:1.6">
-
-      Join this tournament when registration
-      and wallet payment are enabled.
-
-      Room information will be published by
-      the admin when the match is ready.
-
-    </p>
 
     ${
-      full
+      joined
+
         ? `
           <button
             class="primary"
             disabled
           >
-            Match Full
+            Already Joined
           </button>
         `
-        : Number(match.fee) > balance
-        ? `
-          <button
-            class="primary"
-            onclick="openWallet()"
-          >
-            Add Money to Join
-          </button>
-        `
+
         : `
           <button
             class="primary"
             onclick="joinMatch(${match.id})"
           >
             ${
-              Number(match.fee) === 0
+              match.fee === 0
                 ? "Join Free Match"
-                : "Join for ৳" + Number(match.fee)
+                : "Join for ৳" + match.fee
             }
           </button>
         `
@@ -1023,47 +1339,111 @@ function openMatch(id) {
 }
 
 
-/*
-  IMPORTANT:
+/* =========================================
+   JOIN MATCH
+   ========================================= */
 
-  এখনো real wallet transaction backend তৈরি হয়নি।
-  তাই paid match থেকে client-side balance কাটছি না।
-*/
+function joinMatch(id) {
 
-async function joinMatch(id) {
-  const match = state.matches.find(function (item) {
-    return item.id === id;
-  });
+  const match =
+    matches.find(function (item) {
+      return item.id === id;
+    });
+
 
   if (!match) {
     toast("Match not found");
     return;
   }
 
-  if (Number(match.fee) > 0) {
-    toast("Payment system is being connected");
-    closeModal();
-    openWallet();
+
+  if (state.joined.includes(id)) {
+
+    toast("Already joined");
+
     return;
   }
+
+
+  if (state.balance < match.fee) {
+
+    toast(
+      "Not enough wallet balance"
+    );
+
+    return;
+  }
+
+
+  state.balance -= match.fee;
+
+  state.joined.push(id);
+
+  saveLocalState();
 
   closeModal();
 
-  toast("Free match registration will be connected next");
+  toast(
+    "Joined successfully!"
+  );
+
+  home();
 }
 
 
-/* =========================================================
+/* =========================================
+   WALLET
+   ========================================= */
+
+function openWallet() {
+
+  openModal(`
+
+    <button
+      class="close"
+      onclick="closeModal()"
+    >
+      ✕
+    </button>
+
+
+    <h2>
+      Wallet
+    </h2>
+
+
+    <p style="
+      margin:15px 0;
+      color:#b9b1c3;
+    ">
+      Current balance:
+      <b>
+        ৳${state.balance}
+      </b>
+    </p>
+
+
+    <p style="
+      color:#8f879d;
+      line-height:1.6;
+    ">
+      Real wallet and payment system
+      will be connected to Supabase
+      transactions and bKash/Nagad
+      gateway.
+    </p>
+
+  `);
+}
+
+
+/* =========================================
    RESULTS
-   ========================================================= */
+   ========================================= */
 
 function showResults() {
-  if (!state.user) {
-    showAuth();
-    return;
-  }
 
-  document.getElementById("app").innerHTML = `
+  app().innerHTML = `
     <div class="shell">
 
       <header class="header">
@@ -1086,16 +1466,18 @@ function showResults() {
 
       </header>
 
+
       <main>
 
         <div class="empty">
 
-          Results will appear here after
-          the admin publishes winners.
+          Results will appear here
+          after tournaments finish.
 
         </div>
 
       </main>
+
 
       ${navigation("results")}
 
@@ -1104,23 +1486,63 @@ function showResults() {
 }
 
 
-/* =========================================================
+/* =========================================
    PROFILE
-   ========================================================= */
+   ========================================= */
 
 async function showProfile() {
-  if (!state.user) {
-    showAuth();
-    return;
+
+  const email =
+    currentUser?.email ||
+    "Player";
+
+
+  let username =
+    email.split("@")[0];
+
+
+  if (supabaseClient && currentUser) {
+
+    try {
+
+      const { data } =
+        await supabaseClient
+          .from("Profiles")
+          .select("username")
+          .eq("id", currentUser.id)
+          .maybeSingle();
+
+
+      if (data?.username) {
+        username = data.username;
+      }
+
+    } catch (error) {
+
+      console.log(
+        "Profile loading:",
+        error
+      );
+
+    }
   }
 
-  await loadProfile();
 
-  const balance = state.profile
-    ? Number(state.profile.balance || 0)
-    : 0;
+  const joinedMatches =
+    state.joined
+      .map(function (id) {
 
-  document.getElementById("app").innerHTML = `
+        return matches.find(
+          function (match) {
+            return match.id === id;
+          }
+        );
+
+      })
+      .filter(Boolean);
+
+
+  app().innerHTML = `
     <div class="shell">
 
       <header class="header">
@@ -1132,21 +1554,14 @@ async function showProfile() {
         <div class="brand">
 
           <b>
-            ${esc(username())}
+            ${esc(username)}
           </b>
 
           <small>
-            Player profile
+            ${esc(email)}
           </small>
 
         </div>
-
-        <button
-          class="wallet"
-          onclick="openWallet()"
-        >
-          ৳ ${balance.toFixed(2)}
-        </button>
 
       </header>
 
@@ -1156,69 +1571,61 @@ async function showProfile() {
         <div class="hero">
 
           <h1>
-            ${esc(username())}
+            ৳ ${state.balance}
           </h1>
 
           <p>
-            ${esc(state.profile?.email || state.user.email || "")}
+            Wallet balance
           </p>
 
-        </div>
-
-
-        <div class="profile-card">
-
-          <div class="profile-row">
-
-            <span>
-              Wallet Balance
-            </span>
-
-            <b>
-              ৳ ${balance.toFixed(2)}
-            </b>
-
-          </div>
-
-          <div class="profile-row">
-
-            <span>
-              Account
-            </span>
-
-            <b>
-              Active
-            </b>
-
-          </div>
+          <button
+            class="primary"
+            onclick="openWallet()"
+          >
+            Wallet
+          </button>
 
         </div>
 
 
-        <button
-          class="primary"
-          onclick="openWallet()"
-        >
-          Wallet
-        </button>
+        <div class="section">
+
+          <h2>
+            My Matches
+          </h2>
+
+        </div>
+
+
+        ${
+          joinedMatches.length
+
+            ? joinedMatches
+                .map(matchCard)
+                .join("")
+
+            : `
+              <div class="empty">
+                You have not joined any
+                match yet.
+              </div>
+            `
+        }
 
 
         <button
-          class="secondary"
-          onclick="editUsername()"
-        >
-          Edit Username
-        </button>
-
-
-        <button
-          class="secondary"
+          class="join"
           onclick="logoutUser()"
+          style="
+            width:100%;
+            margin-top:25px;
+          "
         >
           Logout
         </button>
 
       </main>
+
 
       ${navigation("profile")}
 
@@ -1227,197 +1634,12 @@ async function showProfile() {
 }
 
 
-/* =========================================================
-   EDIT USERNAME
-   ========================================================= */
-
-function editUsername() {
-  const current = username();
-
-  openModal(`
-    <button
-      class="close"
-      onclick="closeModal()"
-    >
-      ✕
-    </button>
-
-    <h2>
-      Edit Username
-    </h2>
-
-    <input
-      id="newUsername"
-      class="auth-input"
-      type="text"
-      value="${esc(current)}"
-      maxlength="30"
-      placeholder="Username"
-    >
-
-    <button
-      class="primary"
-      onclick="saveUsername()"
-    >
-      Save Username
-    </button>
-  `);
-}
-
-
-async function saveUsername() {
-  const input =
-    document.getElementById("newUsername");
-
-  if (!input) {
-    return;
-  }
-
-  const newName = input.value.trim();
-
-  if (!newName) {
-    toast("Username required");
-    return;
-  }
-
-  if (newName.length < 3) {
-    toast("Username must be at least 3 characters");
-    return;
-  }
-
-  if (newName.length > 30) {
-    toast("Username is too long");
-    return;
-  }
-
-  const { data, error } =
-    await supabaseClient
-      .from("Profiles")
-      .update({
-        username: newName
-      })
-      .eq("id", state.user.id)
-      .select()
-      .single();
-
-  if (error) {
-    console.error("Username update error:", error);
-    toast(error.message);
-    return;
-  }
-
-  state.profile = data;
-
-  closeModal();
-
-  toast("Username updated");
-
-  showProfile();
-}
-
-
-/* =========================================================
-   WALLET
-   ========================================================= */
-
-function openWallet() {
-  const balance = state.profile
-    ? Number(state.profile.balance || 0)
-    : 0;
-
-  openModal(`
-    <button
-      class="close"
-      onclick="closeModal()"
-    >
-      ✕
-    </button>
-
-    <h2>
-      Wallet
-    </h2>
-
-    <div
-      style="
-        font-size:32px;
-        font-weight:800;
-        margin:18px 0;
-      "
-    >
-      ৳ ${balance.toFixed(2)}
-    </div>
-
-    <p
-      style="
-        color:#b9b1c3;
-        line-height:1.6;
-      "
-    >
-      Your wallet balance is stored
-      in your RENIT profile.
-    </p>
-
-    <button
-      class="primary"
-      onclick="closeModal(); toast('Payment system coming next')"
-    >
-      Add Money
-    </button>
-
-    <p
-      style="
-        color:#8f879d;
-        font-size:12px;
-        margin-top:10px;
-      "
-    >
-      bKash / Nagad payment gateway
-      will be connected in the next stage.
-    </p>
-  `);
-}
-
-
-/* =========================================================
-   HOME FILTER
-   ========================================================= */
-
-function filterHome(game, button) {
-  document
-    .querySelectorAll(".chip")
-    .forEach(function (chip) {
-      chip.classList.remove("active");
-    });
-
-  if (button) {
-    button.classList.add("active");
-  }
-
-  const list = state.matches.filter(function (match) {
-    return (
-      game === "ALL" ||
-      match.game === game
-    );
-  });
-
-  const container =
-    document.getElementById("homeMatches");
-
-  if (!container) {
-    return;
-  }
-
-  container.innerHTML = list.length
-    ? list.map(matchCard).join("")
-    : `<div class="empty">No matches.</div>`;
-}
-
-
-/* =========================================================
+/* =========================================
    NAVIGATION
-   ========================================================= */
+   ========================================= */
 
 function navigation(active) {
+
   return `
     <nav class="nav">
 
@@ -1461,18 +1683,85 @@ function navigation(active) {
 }
 
 
-/* =========================================================
+/* =========================================
+   HOME FILTER
+   ========================================= */
+
+function filterHome(game, button) {
+
+  document
+    .querySelectorAll(".chip")
+    .forEach(function (chip) {
+
+      chip.classList.remove(
+        "active"
+      );
+
+    });
+
+
+  if (button) {
+    button.classList.add("active");
+  }
+
+
+  const list =
+    matches.filter(function (match) {
+
+      return (
+        game === "ALL" ||
+        match.game === game
+      );
+
+    });
+
+
+  const container =
+    document.getElementById(
+      "homeMatches"
+    );
+
+
+  if (!container) {
+    return;
+  }
+
+
+  container.innerHTML =
+    list.length
+
+      ? list
+          .map(matchCard)
+          .join("")
+
+      : `
+        <div class="empty">
+          No matches.
+        </div>
+      `;
+}
+
+
+/* =========================================
    MODAL
-   ========================================================= */
+   ========================================= */
 
 function openModal(html) {
+
   closeModal();
+
 
   const modal =
     document.createElement("div");
 
-  modal.className = "modal";
-  modal.id = "modal";
+
+  modal.className =
+    "modal";
+
+
+  modal.id =
+    "modal";
+
 
   modal.innerHTML = `
     <div class="sheet">
@@ -1480,19 +1769,136 @@ function openModal(html) {
     </div>
   `;
 
-  document.body.appendChild(modal);
+
+  document.body.appendChild(
+    modal
+  );
 }
 
 
 function closeModal() {
+
   const modal =
-    document.getElementById("modal");
+    document.getElementById(
+      "modal"
+    );
+
 
   if (modal) {
     modal.remove();
   }
 }
 
+
+/* =========================================
+   LOGOUT
+   ========================================= */
+
+async function logoutUser() {
+
+  if (supabaseClient) {
+
+    try {
+
+      await supabaseClient.auth.signOut();
+
+    } catch (error) {
+
+      console.log(
+        "Logout:",
+        error
+      );
+
+    }
+  }
+
+
+  currentUser = null;
+
+  showAuth();
+
+  toast(
+    "Logged out successfully"
+  );
+}
+
+
+/* =========================================
+   START APP
+   ========================================= */
+
+async function startApp() {
+
+  try {
+
+    currentUser =
+      await getCurrentUser();
+
+
+    if (!currentUser) {
+
+      showAuth();
+
+      return;
+    }
+
+
+    await createProfile(
+      currentUser,
+      currentUser.email
+        ?.split("@")[0]
+    );
+
+
+    home();
+
+  } catch (error) {
+
+    console.error(
+      "START APP ERROR:",
+      error
+    );
+
+
+    /*
+      VERY IMPORTANT:
+      Even if Supabase has an error,
+      the page will NOT remain blank.
+    */
+
+    showAuth();
+  }
+}
+
+
+/* =========================================
+   AUTH STATE LISTENER
+   ========================================= */
+
+if (supabaseClient) {
+
+  supabaseClient.auth.onAuthStateChange(
+    function (event, session) {
+
+      console.log(
+        "Auth event:",
+        event
+      );
+
+      if (session?.user) {
+        currentUser =
+          session.user;
+      }
+
+    }
+  );
+
+}
+
+
+/* =========================================
+   ESCAPE KEY
+   ========================================= */
 
 document.addEventListener(
   "keydown",
@@ -1506,96 +1912,8 @@ document.addEventListener(
 );
 
 
-/* =========================================================
-   AUTH SESSION
-   ========================================================= */
-
-async function startApp() {
-  if (!window.supabaseClient) {
-
-    document.getElementById("app").innerHTML = `
-      <div class="shell">
-        <div class="empty">
-          <h2>Configuration Error</h2>
-          <p>
-            Supabase configuration could not be loaded.
-          </p>
-        </div>
-      </div>
-    `;
-
-    return;
-  }
-
-  const {
-    data,
-    error
-  } = await supabaseClient.auth.getSession();
-
-  if (error) {
-    console.error("Session error:", error);
-    showAuth();
-    return;
-  }
-
-  if (data.session && data.session.user) {
-
-    state.user = data.session.user;
-
-    await loadProfile();
-
-    home();
-
-  } else {
-
-    showAuth();
-
-  }
-
-
-  /*
-    Login / logout / email confirmation-এর পর
-    session change হলে app automatically update হবে।
-  */
-
-  supabaseClient.auth.onAuthStateChange(
-    async function (event, session) {
-
-      if (session && session.user) {
-
-        state.user = session.user;
-
-        await loadProfile();
-
-        /*
-          INITIAL_SESSION / SIGNED_IN-এর সময়
-          already-rendered page আবার render করার দরকার নেই
-          যদি user page-এ থাকে।
-        */
-
-        if (
-          event === "SIGNED_IN" &&
-          !document.querySelector(".nav")
-        ) {
-          home();
-        }
-
-      } else {
-
-        state.user = null;
-        state.profile = null;
-
-        showAuth();
-
-      }
-
-    }
-  );
-}
-
-
-/* =========================================================
+/* =========================================
    START
-   ========================================================= */
+   ========================================= */
 
 startApp();
