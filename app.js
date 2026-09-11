@@ -684,6 +684,22 @@ async function openMatch(id) {
   const prize = tournamentPrize(data);
   const slots = tournamentSlots(data);
 
+  let room = null;
+
+  if (currentUser) {
+    const { data: roomData, error: roomError } =
+      await db.rpc(
+        "get_my_tournament_room",
+        {
+          p_tournament_id: id
+        }
+      );
+
+    if (!roomError && roomData?.length) {
+      room = roomData[0];
+    }
+  }
+
   app.innerHTML = pageShell(`
     <main style="padding:18px 16px 90px;">
       <button onclick="showMatches()" style="
@@ -709,6 +725,38 @@ async function openMatch(id) {
         <p>Entry Fee: <b>৳${esc(fee)}</b></p>
         <p>Prize Pool: <b>৳${esc(prize)}</b></p>
         <p>Slots: <b>${esc(slots)}</b></p>
+
+        ${room ? `
+          <div style="
+            margin-top:20px;
+            padding:16px;
+            background:#151d2d;
+            border:1px solid #2c3952;
+            border-radius:14px;
+          ">
+            <div style="
+              color:#8f9bb0;
+              font-size:12px;
+              margin-bottom:10px;
+            ">
+              ROOM INFORMATION
+            </div>
+
+            <div style="margin-bottom:10px;">
+              <span style="color:#8f9bb0;">Room ID</span><br>
+              <b style="font-size:18px;">
+                ${esc(room.room_id || "Not published")}
+              </b>
+            </div>
+
+            <div>
+              <span style="color:#8f9bb0;">Password</span><br>
+              <b style="font-size:18px;">
+                ${esc(room.room_password || "Not published")}
+              </b>
+            </div>
+          </div>
+        ` : ""}
 
         ${primaryBtn(
           "Join Tournament",
