@@ -1682,4 +1682,4 @@ document.addEventListener(
    START WEBSITE
 ========================================================= */
 
-home();
+checkAuth();
