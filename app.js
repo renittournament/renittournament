@@ -498,6 +498,7 @@ function tournamentPrize(t) {
 
 function tournamentSlots(t) {
   return (
+    t. max_players ??
     t.slots ??
     t.max_slots ??
     t.total_slots ??
