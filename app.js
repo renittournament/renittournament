@@ -1,5 +1,9 @@
 const KEY = "renit_tournament_v2";
 
+/* =========================================================
+   TOURNAMENT DATA
+========================================================= */
+
 const seedMatches = [
   {
     id: 1,
@@ -12,6 +16,7 @@ const seedMatches = [
     time: "Today • 9:00 PM",
     status: "OPEN"
   },
+
   {
     id: 2,
     game: "BR-DUO",
@@ -23,6 +28,7 @@ const seedMatches = [
     time: "Today • 10:00 PM",
     status: "OPEN"
   },
+
   {
     id: 3,
     game: "FREE FIRE",
@@ -34,6 +40,7 @@ const seedMatches = [
     time: "Tomorrow • 8:00 PM",
     status: "OPEN"
   },
+
   {
     id: 4,
     game: "CS 4 VS 4",
@@ -45,6 +52,7 @@ const seedMatches = [
     time: "Tomorrow • 10:00 PM",
     status: "OPEN"
   },
+
   {
     id: 5,
     game: "LONE WOLF",
@@ -56,6 +64,7 @@ const seedMatches = [
     time: "Tomorrow • 9:00 PM",
     status: "OPEN"
   },
+
   {
     id: 6,
     game: "SPECIAL MATCH",
@@ -66,18 +75,91 @@ const seedMatches = [
     joined: 10,
     time: "Friday • 10:00 PM",
     status: "OPEN"
+  },
+
+  {
+    id: 7,
+    game: "CUSTOM 2VS2 HEADSHOOT",
+    title: "Custom 2VS2 Headshoot",
+    fee: 20,
+    prize: 200,
+    slots: 16,
+    joined: 4,
+    time: "Friday • 8:00 PM",
+    status: "OPEN"
+  },
+
+  {
+    id: 8,
+    game: "LONE WOLF HEADSHOOT",
+    title: "Lone Wolf Headshoot",
+    fee: 15,
+    prize: 150,
+    slots: 24,
+    joined: 6,
+    time: "Friday • 9:00 PM",
+    status: "OPEN"
+  },
+
+  {
+    id: 9,
+    game: "LOST TO WIN",
+    title: "Lost To Win",
+    fee: 10,
+    prize: 100,
+    slots: 48,
+    joined: 12,
+    time: "Saturday • 8:00 PM",
+    status: "OPEN"
+  },
+
+  {
+    id: 10,
+    game: "FREE MATCH",
+    title: "Free Match",
+    fee: 0,
+    prize: 100,
+    slots: 48,
+    joined: 10,
+    time: "Saturday • 9:00 PM",
+    status: "OPEN"
   }
 ];
+
+
+/* =========================================================
+   LOAD / SAVE
+========================================================= */
 
 function loadState() {
   try {
     const saved = localStorage.getItem(KEY);
 
     if (saved) {
-      return JSON.parse(saved);
+      const data = JSON.parse(saved);
+
+      return {
+        matches: Array.isArray(data.matches)
+          ? data.matches
+          : seedMatches,
+
+        joined: Array.isArray(data.joined)
+          ? data.joined
+          : [],
+
+        balance:
+          typeof data.balance === "number"
+            ? data.balance
+            : 40,
+
+        user:
+          typeof data.user === "string"
+            ? data.user
+            : "Player"
+      };
     }
   } catch (error) {
-    console.log(error);
+    console.log("State load error:", error);
   }
 
   return {
@@ -88,140 +170,312 @@ function loadState() {
   };
 }
 
+
 let state = loadState();
 
+
+/* =========================================================
+   ADD NEW GAME CATEGORIES TO OLD SAVED DATA
+========================================================= */
+
+const newMatches = seedMatches.filter(function (newMatch) {
+
+  return !state.matches.some(function (oldMatch) {
+
+    return oldMatch.id === newMatch.id;
+
+  });
+
+});
+
+
+newMatches.forEach(function (newMatch) {
+
+  state.matches.push(newMatch);
+
+});
+
+
+saveState();
+
+
+/* =========================================================
+   SAVE STATE
+========================================================= */
+
 function saveState() {
-  localStorage.setItem(KEY, JSON.stringify(state));
+
+  try {
+
+    localStorage.setItem(
+      KEY,
+      JSON.stringify(state)
+    );
+
+  } catch (error) {
+
+    console.log("State save error:", error);
+
+  }
+
 }
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
 
 function esc(value) {
-  return String(value).replace(/[&<>"']/g, function (char) {
-    return {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;"
-    }[char];
-  });
+
+  return String(value).replace(
+    /[&<>"']/g,
+    function (char) {
+
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[char];
+
+    }
+  );
+
 }
 
+
+/* =========================================================
+   TOAST MESSAGE
+========================================================= */
+
 function toast(message) {
-  const old = document.querySelector(".toast");
+
+  const old =
+    document.querySelector(".toast");
 
   if (old) {
     old.remove();
   }
 
-  const box = document.createElement("div");
+
+  const box =
+    document.createElement("div");
 
   box.className = "toast";
+
   box.textContent = message;
 
   document.body.appendChild(box);
 
+
   setTimeout(function () {
-    box.remove();
+
+    if (box) {
+      box.remove();
+    }
+
   }, 1800);
+
 }
+
+
+/* =========================================================
+   ALL GAME CATEGORIES
+========================================================= */
 
 function getGames() {
+
   return [
+
     "BR MATCH",
+
     "BR-DUO",
+
     "FREE FIRE",
+
     "CS 4 VS 4",
+
     "LONE WOLF",
-    "SPECIAL MATCH"
+
+    "SPECIAL MATCH",
+
+    "CUSTOM 2VS2 HEADSHOOT",
+
+    "LONE WOLF HEADSHOOT",
+
+    "LOST TO WIN",
+
+    "FREE MATCH"
+
   ];
+
 }
 
+
+/* =========================================================
+   MATCH CARD
+========================================================= */
+
 function matchCard(match) {
-  const full = match.joined >= match.slots;
+
+  const full =
+    match.joined >= match.slots;
+
 
   return `
+
     <article class="match">
 
       <div class="matchtop">
-        <h3>${esc(match.title)}</h3>
+
+        <h3>
+          ${esc(match.title)}
+        </h3>
 
         <span class="status">
           ${full ? "FULL" : esc(match.status)}
         </span>
+
       </div>
 
-      <p style="color:#9b94aa;margin-top:5px">
-        ${esc(match.game)} • ${esc(match.time)}
+
+      <p style="
+        color:#9b94aa;
+        margin-top:5px;
+      ">
+
+        ${esc(match.game)}
+        •
+        ${esc(match.time)}
+
       </p>
+
 
       <div class="meta">
 
         <div>
-          <span>Entry</span>
-          <b>৳${match.fee}</b>
+
+          <span>
+            Entry
+          </span>
+
+          <b>
+            ${match.fee === 0
+              ? "FREE"
+              : "৳" + match.fee}
+          </b>
+
         </div>
 
-        <div>
-          <span>Prize</span>
-          <b>৳${match.prize}</b>
-        </div>
 
         <div>
-          <span>Slots</span>
-          <b>${match.joined}/${match.slots}</b>
+
+          <span>
+            Prize
+          </span>
+
+          <b>
+            ৳${match.prize}
+          </b>
+
+        </div>
+
+
+        <div>
+
+          <span>
+            Slots
+          </span>
+
+          <b>
+            ${match.joined}/${match.slots}
+          </b>
+
         </div>
 
       </div>
 
+
       <button
         class="join"
         onclick="openMatch(${match.id})"
+        ${full ? "disabled" : ""}
       >
-        ${full ? "Full" : "View & Join"}
+
+        ${full
+          ? "Full"
+          : "View & Join"}
+
       </button>
 
     </article>
+
   `;
+
 }
 
-/* =========================
+
+/* =========================================================
    HOME
-========================= */
+========================================================= */
 
 function home() {
+
   document.getElementById("app").innerHTML = `
 
     <div class="shell">
 
+
       <header class="header">
 
-        <div class="logo">🎮</div>
+        <div class="logo">
+          🎮
+        </div>
+
 
         <div class="brand">
-          <b>RENIT TOURNAMENT</b>
-          <small>Play • Compete • Win</small>
+
+          <b>
+            RENIT TOURNAMENT
+          </b>
+
+          <small>
+            Play • Compete • Win
+          </small>
+
         </div>
+
 
         <button
           class="wallet"
           onclick="openWallet()"
         >
+
           ৳ ${state.balance}
+
         </button>
 
       </header>
 
+
+
       <main>
+
 
         <div class="hero">
 
-          <h1>Ready to compete?</h1>
+          <h1>
+            Ready to compete?
+          </h1>
 
           <p>
             Join a match, play fair and win rewards.
           </p>
 
+
           <div class="chips">
+
 
             <button
               class="chip active"
@@ -230,12 +484,14 @@ function home() {
               All
             </button>
 
+
             <button
               class="chip"
               onclick="filterHome('BR MATCH', this)"
             >
               BR
             </button>
+
 
             <button
               class="chip"
@@ -244,12 +500,14 @@ function home() {
               Duo
             </button>
 
+
             <button
               class="chip"
               onclick="filterHome('FREE FIRE', this)"
             >
               Free Fire
             </button>
+
 
             <button
               class="chip"
@@ -258,13 +516,19 @@ function home() {
               CS
             </button>
 
+
           </div>
 
         </div>
 
+
+
         <div class="section">
 
-          <h2>Games</h2>
+          <h2>
+            Games
+          </h2>
+
 
           <button
             class="link"
@@ -275,43 +539,70 @@ function home() {
 
         </div>
 
+
+
         <section class="grid">
+
 
           ${getGames().map(function (game) {
 
-            const count = state.matches.filter(function (m) {
-              return m.game === game;
-            }).length;
+            const count =
+              state.matches.filter(function (match) {
+
+                return match.game === game;
+
+              }).length;
+
 
             return `
+
               <article
                 class="game"
                 onclick="showMatches('${game}')"
               >
 
+
                 ${
                   game === "BR MATCH" ||
                   game === "BR-DUO" ||
-                  game === "FREE FIRE"
+                  game === "FREE FIRE" ||
+                  game === "CUSTOM 2VS2 HEADSHOOT"
                     ? '<span class="badge">LIVE</span>'
                     : ""
                 }
 
+
                 <div>
-                  <b>${game}</b>
-                  <small>${count} matches</small>
+
+                  <b>
+                    ${esc(game)}
+                  </b>
+
+                  <small>
+                    ${count}
+                    ${count === 1 ? "match" : "matches"}
+                  </small>
+
                 </div>
 
+
               </article>
+
             `;
 
           }).join("")}
 
+
         </section>
+
+
 
         <div class="section">
 
-          <h2>Upcoming matches</h2>
+          <h2>
+            Upcoming matches
+          </h2>
+
 
           <button
             class="link"
@@ -322,6 +613,8 @@ function home() {
 
         </div>
 
+
+
         <div id="homeMatches">
 
           ${state.matches
@@ -331,40 +624,60 @@ function home() {
 
         </div>
 
+
       </main>
+
+
 
       ${navigation("home")}
 
+
     </div>
+
   `;
+
 }
 
-/* =========================
-   MATCHES
-========================= */
+
+/* =========================================================
+   MATCHES PAGE
+========================================================= */
 
 function showMatches(game) {
 
-  const selectedGame = game || "ALL";
+  const selectedGame =
+    game || "ALL";
 
-  const list = state.matches.filter(function (match) {
-    return (
-      selectedGame === "ALL" ||
-      match.game === selectedGame
-    );
-  });
+
+  const list =
+    state.matches.filter(function (match) {
+
+      return (
+        selectedGame === "ALL" ||
+        match.game === selectedGame
+      );
+
+    });
+
 
   document.getElementById("app").innerHTML = `
 
     <div class="shell">
 
+
       <header class="header">
 
-        <div class="logo">🎮</div>
+
+        <div class="logo">
+          🎮
+        </div>
+
 
         <div class="brand">
 
-          <b>Matches</b>
+          <b>
+            Matches
+          </b>
 
           <small>
             Choose your tournament
@@ -372,18 +685,26 @@ function showMatches(game) {
 
         </div>
 
+
         <button
           class="wallet"
           onclick="openWallet()"
         >
+
           ৳ ${state.balance}
+
         </button>
+
 
       </header>
 
+
+
       <main>
 
+
         <div class="adminbar">
+
 
           <button
             onclick="showMatches()"
@@ -391,11 +712,13 @@ function showMatches(game) {
             All
           </button>
 
+
           <button
             onclick="showMatches('BR MATCH')"
           >
             BR
           </button>
+
 
           <button
             onclick="showMatches('BR-DUO')"
@@ -403,11 +726,13 @@ function showMatches(game) {
             Duo
           </button>
 
+
           <button
             onclick="showMatches('FREE FIRE')"
           >
             Free Fire
           </button>
+
 
           <button
             onclick="showMatches('CS 4 VS 4')"
@@ -415,27 +740,82 @@ function showMatches(game) {
             CS
           </button>
 
+
           <button
             onclick="showMatches('LONE WOLF')"
           >
             Lone Wolf
           </button>
 
+
+          <button
+            onclick="showMatches('SPECIAL MATCH')"
+          >
+            Special
+          </button>
+
+
+          <button
+            onclick="showMatches('CUSTOM 2VS2 HEADSHOOT')"
+          >
+            2VS2
+          </button>
+
+
+          <button
+            onclick="showMatches('LONE WOLF HEADSHOOT')"
+          >
+            LW HS
+          </button>
+
+
+          <button
+            onclick="showMatches('LOST TO WIN')"
+          >
+            Lost
+          </button>
+
+
+          <button
+            onclick="showMatches('FREE MATCH')"
+          >
+            Free
+          </button>
+
+
         </div>
 
-        <div style="margin-bottom:20px">
+
+
+        <div style="
+          margin-bottom:20px;
+        ">
+
 
           ${
             selectedGame === "ALL"
+
               ? "<h2>All Matches</h2>"
-              : `<h2>${esc(selectedGame)}</h2>`
+
+              : `
+                <h2>
+                  ${esc(selectedGame)}
+                </h2>
+              `
           }
+
 
         </div>
 
+
+
         ${
           list.length
-            ? list.map(matchCard).join("")
+
+            ? list
+                .map(matchCard)
+                .join("")
+
             : `
               <div class="empty">
                 No matches available.
@@ -443,36 +823,54 @@ function showMatches(game) {
             `
         }
 
+
       </main>
+
+
 
       ${navigation("matches")}
 
+
     </div>
+
   `;
+
 }
 
-/* =========================
+
+/* =========================================================
    MATCH DETAILS
-========================= */
+========================================================= */
 
 function openMatch(id) {
 
-  const match = state.matches.find(function (item) {
-    return item.id === id;
-  });
+  const match =
+    state.matches.find(function (item) {
+
+      return item.id === id;
+
+    });
+
 
   if (!match) {
+
     toast("Match not found");
+
     return;
+
   }
+
 
   const alreadyJoined =
     state.joined.includes(id);
 
+
   const full =
     match.joined >= match.slots;
 
+
   openModal(`
+
 
     <button
       class="close"
@@ -481,32 +879,72 @@ function openMatch(id) {
       ✕
     </button>
 
+
     <h2>
       ${esc(match.title)}
     </h2>
 
-    <p style="color:#9b94aa;margin-top:6px">
-      ${esc(match.game)} • ${esc(match.time)}
+
+    <p style="
+      color:#9b94aa;
+      margin-top:6px;
+    ">
+
+      ${esc(match.game)}
+      •
+      ${esc(match.time)}
+
     </p>
+
+
 
     <div class="meta">
 
-      <div>
-        <span>Entry</span>
-        <b>৳${match.fee}</b>
-      </div>
 
       <div>
-        <span>Prize</span>
-        <b>৳${match.prize}</b>
+
+        <span>
+          Entry
+        </span>
+
+        <b>
+          ${match.fee === 0
+            ? "FREE"
+            : "৳" + match.fee}
+        </b>
+
       </div>
 
+
       <div>
-        <span>Players</span>
-        <b>${match.joined}/${match.slots}</b>
+
+        <span>
+          Prize
+        </span>
+
+        <b>
+          ৳${match.prize}
+        </b>
+
       </div>
+
+
+      <div>
+
+        <span>
+          Players
+        </span>
+
+        <b>
+          ${match.joined}/${match.slots}
+        </b>
+
+      </div>
+
 
     </div>
+
+
 
     <p style="
       color:#c8c0d2;
@@ -519,82 +957,129 @@ function openMatch(id) {
 
     </p>
 
+
+
     ${
       alreadyJoined
+
         ? `
+
           <button
             class="primary"
             disabled
           >
             Already Joined
           </button>
+
         `
+
         : `
+
           <button
             class="primary"
             onclick="joinMatch(${match.id})"
             ${full ? "disabled" : ""}
           >
+
             ${
               full
+
                 ? "Match Full"
-                : "Join for ৳" + match.fee
+
+                : match.fee === 0
+
+                  ? "Join Free Match"
+
+                  : "Join for ৳" + match.fee
             }
+
           </button>
+
         `
     }
 
+
   `);
+
 }
 
-/* =========================
-   JOIN
-========================= */
+
+/* =========================================================
+   JOIN MATCH
+========================================================= */
 
 function joinMatch(id) {
 
-  const match = state.matches.find(function (item) {
-    return item.id === id;
-  });
+  const match =
+    state.matches.find(function (item) {
+
+      return item.id === id;
+
+    });
+
 
   if (!match) {
+
     toast("Match not found");
+
     return;
+
   }
+
 
   if (state.joined.includes(id)) {
+
     toast("Already joined");
+
     return;
+
   }
+
 
   if (match.joined >= match.slots) {
+
     toast("Match is full");
+
     return;
+
   }
 
+
   if (state.balance < match.fee) {
+
     toast("Not enough balance");
+
     return;
+
   }
+
 
   state.balance -= match.fee;
 
+
   match.joined += 1;
+
 
   state.joined.push(id);
 
+
   saveState();
+
 
   closeModal();
 
+
   toast("Joined successfully!");
 
+
   home();
+
 }
 
-/* =========================
+
+/* =========================================================
    RESULTS
-========================= */
+========================================================= */
 
 function showResults() {
 
@@ -602,18 +1087,34 @@ function showResults() {
 
     <div class="shell">
 
+
       <header class="header">
 
-        <div class="logo">🏆</div>
+
+        <div class="logo">
+          🏆
+        </div>
+
 
         <div class="brand">
-          <b>Results</b>
-          <small>Recent tournament results</small>
+
+          <b>
+            Results
+          </b>
+
+          <small>
+            Recent tournament results
+          </small>
+
         </div>
+
 
       </header>
 
+
+
       <main>
+
 
         <div class="empty">
 
@@ -622,41 +1123,62 @@ function showResults() {
 
         </div>
 
+
       </main>
+
+
 
       ${navigation("results")}
 
+
     </div>
+
   `;
+
 }
 
-/* =========================
+
+/* =========================================================
    PROFILE
-========================= */
+========================================================= */
 
 function showProfile() {
 
-  const joinedMatches = state.joined
-    .map(function (id) {
+  const joinedMatches =
+    state.joined
+      .map(function (id) {
 
-      return state.matches.find(function (match) {
-        return match.id === id;
-      });
+        return state.matches.find(
+          function (match) {
 
-    })
-    .filter(Boolean);
+            return match.id === id;
+
+          }
+        );
+
+      })
+      .filter(Boolean);
+
+
 
   document.getElementById("app").innerHTML = `
 
     <div class="shell">
 
+
       <header class="header">
 
-        <div class="logo">👤</div>
+
+        <div class="logo">
+          👤
+        </div>
+
 
         <div class="brand">
 
-          <b>${esc(state.user)}</b>
+          <b>
+            ${esc(state.user)}
+          </b>
 
           <small>
             Player profile
@@ -664,19 +1186,26 @@ function showProfile() {
 
         </div>
 
+
       </header>
+
+
 
       <main>
 
+
         <div class="hero">
+
 
           <h1>
             ৳ ${state.balance}
           </h1>
 
+
           <p>
             Wallet balance
           </p>
+
 
           <button
             class="primary"
@@ -685,17 +1214,28 @@ function showProfile() {
             Wallet
           </button>
 
+
         </div>
+
+
 
         <div class="section">
 
-          <h2>My matches</h2>
+          <h2>
+            My matches
+          </h2>
 
         </div>
 
+
+
         ${
           joinedMatches.length
-            ? joinedMatches.map(matchCard).join("")
+
+            ? joinedMatches
+                .map(matchCard)
+                .join("")
+
             : `
               <div class="empty">
                 You have not joined any match yet.
@@ -703,21 +1243,29 @@ function showProfile() {
             `
         }
 
+
       </main>
+
+
 
       ${navigation("profile")}
 
+
     </div>
+
   `;
+
 }
 
-/* =========================
+
+/* =========================================================
    WALLET
-========================= */
+========================================================= */
 
 function openWallet() {
 
   openModal(`
+
 
     <button
       class="close"
@@ -726,7 +1274,11 @@ function openWallet() {
       ✕
     </button>
 
-    <h2>Wallet</h2>
+
+    <h2>
+      Wallet
+    </h2>
+
 
     <p style="
       margin:12px 0;
@@ -741,12 +1293,16 @@ function openWallet() {
 
     </p>
 
+
+
     <button
       class="primary"
       onclick="addDemoMoney()"
     >
       Add ৳50 Demo
     </button>
+
+
 
     <p style="
       color:#8f879d;
@@ -760,157 +1316,249 @@ function openWallet() {
 
     </p>
 
+
   `);
+
 }
+
+
+/* =========================================================
+   DEMO MONEY
+========================================================= */
 
 function addDemoMoney() {
 
   state.balance += 50;
 
+
   saveState();
+
 
   closeModal();
 
+
   toast("৳50 demo balance added");
 
+
   showProfile();
+
 }
 
-/* =========================
+
+/* =========================================================
    HOME FILTER
-========================= */
+========================================================= */
 
 function filterHome(game, button) {
 
   document
     .querySelectorAll(".chip")
     .forEach(function (chip) {
+
       chip.classList.remove("active");
+
     });
 
+
   if (button) {
+
     button.classList.add("active");
+
   }
 
-  const list = state.matches.filter(function (match) {
-    return (
-      game === "ALL" ||
-      match.game === game
-    );
-  });
+
+  const list =
+    state.matches.filter(function (match) {
+
+      return (
+        game === "ALL" ||
+        match.game === game
+      );
+
+    });
+
 
   const container =
     document.getElementById("homeMatches");
 
+
   if (!container) {
+
     return;
+
   }
 
-  container.innerHTML = list.length
-    ? list.map(matchCard).join("")
-    : `
-      <div class="empty">
-        No matches.
-      </div>
-    `;
+
+  container.innerHTML =
+    list.length
+
+      ? list
+          .map(matchCard)
+          .join("")
+
+      : `
+        <div class="empty">
+          No matches.
+        </div>
+      `;
+
 }
 
-/* =========================
+
+/* =========================================================
    NAVIGATION
-========================= */
+========================================================= */
 
 function navigation(active) {
 
   return `
 
+
     <nav class="nav">
+
 
       <button
         class="${active === "home" ? "active" : ""}"
         onclick="home()"
       >
-        <i>⌂</i>
+
+        <i>
+          ⌂
+        </i>
+
         Home
+
       </button>
+
+
 
       <button
         class="${active === "matches" ? "active" : ""}"
         onclick="showMatches()"
       >
-        <i>🎮</i>
+
+        <i>
+          🎮
+        </i>
+
         Matches
+
       </button>
+
+
 
       <button
         class="${active === "results" ? "active" : ""}"
         onclick="showResults()"
       >
-        <i>🏆</i>
+
+        <i>
+          🏆
+        </i>
+
         Results
+
       </button>
+
+
 
       <button
         class="${active === "profile" ? "active" : ""}"
         onclick="showProfile()"
       >
-        <i>👤</i>
+
+        <i>
+          👤
+        </i>
+
         Profile
+
       </button>
 
+
     </nav>
+
   `;
+
 }
 
-/* =========================
+
+/* =========================================================
    MODAL
-========================= */
+========================================================= */
 
 function openModal(html) {
 
   closeModal();
 
+
   const modal =
     document.createElement("div");
 
-  modal.className = "modal";
-  modal.id = "modal";
+
+  modal.className =
+    "modal";
+
+
+  modal.id =
+    "modal";
+
 
   modal.innerHTML = `
+
     <div class="sheet">
+
       ${html}
+
     </div>
+
   `;
 
+
   document.body.appendChild(modal);
+
 }
+
+
+/* =========================================================
+   CLOSE MODAL
+========================================================= */
 
 function closeModal() {
 
   const modal =
     document.getElementById("modal");
 
+
   if (modal) {
+
     modal.remove();
+
   }
+
 }
 
-/* =========================
-   KEYBOARD
-========================= */
+
+/* =========================================================
+   ESC KEY
+========================================================= */
 
 document.addEventListener(
   "keydown",
   function (event) {
 
     if (event.key === "Escape") {
+
       closeModal();
+
     }
 
   }
 );
 
-/* =========================
-   START
-========================= */
+
+/* =========================================================
+   START WEBSITE
+========================================================= */
 
 home();
