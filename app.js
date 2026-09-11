@@ -1419,6 +1419,73 @@ async function openAdmin() {
         border-radius:14px;
         padding:16px;
       ">
+       <div style="
+  margin-bottom:15px;
+  background:#101521;
+  border:1px solid #202838;
+  border-radius:14px;
+  padding:16px;
+">
+  <h3 style="margin-top:0;">Publish Room Information</h3>
+
+  <select id="roomTournamentId" style="
+    width:100%;
+    box-sizing:border-box;
+    background:#111722;
+    color:white;
+    border:1px solid #293346;
+    border-radius:10px;
+    padding:13px;
+    margin-top:10px;
+  ">
+    <option value="">Loading tournaments...</option>
+  </select>
+
+  <input
+    id="roomIdInput"
+    type="text"
+    placeholder="Room ID"
+    style="
+      width:100%;
+      box-sizing:border-box;
+      background:#111722;
+      color:white;
+      border:1px solid #293346;
+      border-radius:10px;
+      padding:13px;
+      margin-top:10px;
+      outline:none;
+    "
+  >
+
+  <input
+    id="roomPasswordInput"
+    type="text"
+    placeholder="Room Password"
+    style="
+      width:100%;
+      box-sizing:border-box;
+      background:#111722;
+      color:white;
+      border:1px solid #293346;
+      border-radius:10px;
+      padding:13px;
+      margin-top:10px;
+      outline:none;
+    "
+  >
+
+  ${primaryBtn(
+    "Publish Room",
+    "publishTournamentRoom()"
+  )}
+
+  <div id="roomPublishMessage" style="
+    margin-top:10px;
+    color:#9ba6b8;
+    font-size:13px;
+  "></div>
+</div> 
         <h3 style="margin-top:0;">Deposit Requests</h3>
 
         <div id="adminDepositRequests">
@@ -1427,9 +1494,92 @@ async function openAdmin() {
       </div>
     </main>
   `);
+async function loadRoomTournaments() {
+  const select = document.getElementById("roomTournamentId");
+  if (!select) return;
 
+  const { data, error } = await db
+    .from("tournaments")
+    .select("id, title, game")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    select.innerHTML =
+      `<option value="">Tournament load করা যায়নি</option>`;
+    return;
+  }
+
+  if (!data?.length) {
+    select.innerHTML =
+      `<option value="">কোনো tournament নেই</option>`;
+    return;
+  }
+
+  select.innerHTML =
+    `<option value="">Tournament select করুন</option>` +
+    data.map(t => `
+      <option value="${esc(t.id)}">
+        ${esc(t.title || "Tournament #" + t.id)}
+      </option>
+    `).join("");
+}
+
+
+async function publishTournamentRoom() {
+  if (!(await isAdmin())) {
+    alert("Admin access denied.");
+    return;
+  }
+
+  const tournamentId =
+    document.getElementById("roomTournamentId").value;
+
+  const roomId =
+    document.getElementById("roomIdInput").value.trim();
+
+  const roomPassword =
+    document.getElementById("roomPasswordInput").value.trim();
+
+  const msg =
+    document.getElementById("roomPublishMessage");
+
+  if (!tournamentId) {
+    msg.textContent = "Tournament select করুন।";
+    return;
+  }
+
+  if (!roomId || !roomPassword) {
+    msg.textContent = "Room ID এবং Password দুটোই দিন।";
+    return;
+  }
+
+  msg.textContent = "Room information publish হচ্ছে...";
+
+  const { data, error } = await db.rpc(
+    "publish_tournament_room",
+    {
+      p_tournament_id: Number(tournamentId),
+      p_room_id: roomId,
+      p_room_password: roomPassword
+    }
+  );
+
+  if (error) {
+    console.log(error);
+    msg.textContent =
+      "Publish করা যায়নি: " + error.message;
+    return;
+  }
+
+  msg.textContent =
+    "Room ID এবং Password successfully published!";
+
+  document.getElementById("roomIdInput").value = "";
+  document.getElementById("roomPasswordInput").value = "";
+}
   await loadAdminDepositRequests();
 }
+await loadRoomTournaments();
 async function createTournament() {
   if (!(await isAdmin())) {
     alert("Admin access denied.");
