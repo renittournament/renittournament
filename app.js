@@ -445,18 +445,51 @@ async function getTournaments(game = null) {
     return [];
   }
 
-  if (!game) return data || [];
+  let tournaments = data || [];
 
-  return (data || []).filter(t => {
-    const value =
-      t.game ||
-      t.game_name ||
-      t.category ||
-      t.type ||
-      "";
+  if (game) {
+    tournaments = tournaments.filter(t => {
+      const value =
+        t.game ||
+        t.game_name ||
+        t.category ||
+        t.type ||
+        "";
 
-    return String(value).toUpperCase() === game.toUpperCase();
+      return String(value).toUpperCase() === game.toUpperCase();
+    });
+  }
+
+  if (!tournaments.length) {
+    return [];
+  }
+
+  const ids = tournaments.map(t => t.id);
+
+  const { data: counts, error: countError } =
+    await db.rpc(
+      "get_tournament_join_counts",
+      {
+        p_tournament_ids: ids
+      }
+    );
+
+  if (countError) {
+    console.log("Join count query:", countError);
+    return tournaments;
+  }
+
+  const countMap = {};
+
+  (counts || []).forEach(row => {
+    countMap[row.tournament_id] =
+      Number(row.joined_players || 0);
   });
+
+  return tournaments.map(t => ({
+    ...t,
+    joined_players: countMap[t.id] || 0
+  }));
 }
 
 function tournamentTitle(t) {
@@ -583,6 +616,11 @@ function matchCard(t) {
   const fee = tournamentFee(t);
   const prize = tournamentPrize(t);
   const slots = tournamentSlots(t);
+  const joinedPlayers = Number(t.joined_players || 0);
+  const remainingSlots = Math.max(
+    Number(slots) - joinedPlayers,
+    0
+  );
 
   return `
     <div style="
@@ -611,10 +649,14 @@ function matchCard(t) {
       ">
         <div>Entry: ৳${esc(fee)}</div>
         <div>Prize: ৳${esc(prize)}</div>
-        <div>Slots: ${esc(slots)}</div>
+        <div>Joined: ${esc(joinedPlayers)} / ${esc(slots)}</div>
+        <div>Remaining: ${esc(remainingSlots)}</div>
         <div>Status: ${esc(t.status || "upcoming")}</div>
       </div>
-      <div>Start: ${esc(tournamentStartTime(t))}</div>
+
+      <div style="margin-top:8px;">
+        Start: ${esc(tournamentStartTime(t))}
+      </div>
 
       ${primaryBtn(
         "View & Join",
