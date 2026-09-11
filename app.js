@@ -978,6 +978,19 @@ async function openWallet() {
           Loading...
         </div>
       </div>
+      <div style="
+  margin-top:15px;
+  background:#101521;
+  border:1px solid #202838;
+  border-radius:14px;
+  padding:16px;
+">
+  <h3 style="margin-top:0;">Transaction History</h3>
+
+  <div id="transactionHistory">
+    Loading...
+  </div>
+</div>
     </main>
   `);
 
@@ -1059,6 +1072,66 @@ window.showGameMatches = showGameMatches;
 window.openMatch = openMatch;
 window.joinTournament = joinTournament;
 window.showResults = showResults;
+async function loadTransactionHistory() {
+  const box = document.getElementById("transactionHistory");
+  if (!box || !currentUser) return;
+
+  const { data, error } = await db
+    .from("wallet_transactions")
+    .select("*")
+    .eq("user_id", currentUser.id)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  if (error) {
+    box.innerHTML =
+      `<div style="color:#ff7185;">
+        Transaction history load করা যায়নি: ${esc(error.message)}
+      </div>`;
+    return;
+  }
+
+  if (!data?.length) {
+    box.innerHTML =
+      `<div style="color:#8f9bb0;">
+        কোনো transaction নেই।
+      </div>`;
+    return;
+  }
+
+  box.innerHTML = data.map(t => `
+    <div style="
+      background:#111722;
+      border:1px solid #293346;
+      border-radius:12px;
+      padding:13px;
+      margin-top:10px;
+    ">
+      <div>
+        <b>${esc(t.type || "-")}</b>
+        <span style="float:right;">
+          ${Number(t.amount) >= 0 ? "+" : ""}৳${esc(t.amount ?? 0)}
+        </span>
+      </div>
+
+      <div style="
+        color:#8f9bb0;
+        font-size:12px;
+        margin-top:6px;
+      ">
+        ${esc(t.description || "-")}
+      </div>
+
+      <div style="
+        color:#8f9bb0;
+        font-size:11px;
+        margin-top:5px;
+      ">
+        ${esc(t.created_at || "")}
+      </div>
+    </div>
+  `).join("");
+}
 async function isAdmin() {
   if (!currentUser) return false;
 
