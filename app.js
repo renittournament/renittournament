@@ -1032,6 +1032,10 @@ async function showProfile() {
         ">
           Balance: ৳${esc(currentProfile?.balance ?? 0)}
         </div>
+        ${await isAdmin() ? primaryBtn(
+  "Admin Panel",
+  "openAdmin()"
+) : ""}
 
         <button onclick="logout()" style="
           width:100%;
