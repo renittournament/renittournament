@@ -1,4 +1,11 @@
-window.RENIT_CONFIG = {
-  supabaseUrl: "https://jeeuayoejozljsjrjtel.supabase.co",
-  supabaseAnonKey: "sb_publishable_zrisa5NAiqdqhAVuJMwHJw_ntoFKYKW"
-};
+const SUPABASE_URL =
+  "https://jeeuayoejozljsjrjtel.supabase.co";
+
+const SUPABASE_KEY =
+  "তোমার আগের Supabase Publishable Key এখানে বসাও";
+
+const supabaseClient =
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
