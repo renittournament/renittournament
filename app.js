@@ -995,6 +995,7 @@ async function openWallet() {
   `);
 
   await loadDepositRequests();
+  await loadTransactionHistory();
 }
 
 async function showProfile() {
