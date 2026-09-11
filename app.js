@@ -683,31 +683,23 @@ async function joinTournament(id) {
     return;
   }
 
-  const { data: existing } = await db
-    .from("registrations")
-    .select("*")
-    .eq("tournament_id", id)
-    .eq("user_id", currentUser.id)
-    .maybeSingle();
-
-  if (existing) {
-    alert("আপনি ইতিমধ্যে এই tournament-এ joined আছেন।");
-    return;
-  }
-
-  const { error } = await db
-    .from("registrations")
-    .insert({
-      tournament_id: id,
-      user_id: currentUser.id
-    });
+  const { data, error } = await db.rpc(
+    "join_tournament",
+    {
+      p_tournament_id: id
+    }
+  );
 
   if (error) {
     alert("Join করা যায়নি: " + error.message);
     return;
   }
 
-  alert("Tournament joined successfully!");
+  alert(
+    `Tournament joined successfully!\nEntry Fee: ৳${data.fee}\nRemaining Balance: ৳${data.balance}`
+  );
+
+  await openMatch(id);
 }
 
 async function showResults() {
