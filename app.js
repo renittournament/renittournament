@@ -1064,6 +1064,7 @@ window.openMatch = openMatch;
 window.joinTournament = joinTournament;
 window.showResults = showResults;
 window.openWallet = openWallet;
+window.submitDepositRequest = submitDepositRequest;
 window.showProfile = showProfile;
 window.login = login;
 window.signup = signup;
