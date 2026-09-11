@@ -603,7 +603,7 @@ function matchCard(t) {
         <div>Entry: ৳${esc(fee)}</div>
         <div>Prize: ৳${esc(prize)}</div>
         <div>Slots: ${esc(slots)}</div>
-        <div>Status: Open</div>
+        <div>Status: ${esc(t.status || "upcoming")}</div>
       </div>
 
       ${primaryBtn(
