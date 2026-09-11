@@ -1063,6 +1063,157 @@ window.showGameMatches = showGameMatches;
 window.openMatch = openMatch;
 window.joinTournament = joinTournament;
 window.showResults = showResults;
+async function isAdmin() {
+  if (!currentUser) return false;
+
+  const { data, error } = await db
+    .from("admin_users")
+    .select("user_id")
+    .eq("user_id", currentUser.id)
+    .maybeSingle();
+
+  return !error && !!data;
+}
+
+async function openAdmin() {
+  if (!currentUser) {
+    loginPage();
+    return;
+  }
+
+  if (!(await isAdmin())) {
+    alert("Admin access denied.");
+    return;
+  }
+
+  app.innerHTML = pageShell(`
+    <main style="padding:18px 16px 90px;">
+      <h2>Admin Panel</h2>
+
+      <div style="
+        background:#101521;
+        border:1px solid #202838;
+        border-radius:14px;
+        padding:16px;
+      ">
+        <h3 style="margin-top:0;">Deposit Requests</h3>
+
+        <div id="adminDepositRequests">
+          Loading...
+        </div>
+      </div>
+    </main>
+  `);
+
+  await loadAdminDepositRequests();
+}
+
+async function loadAdminDepositRequests() {
+  const box = document.getElementById("adminDepositRequests");
+  if (!box) return;
+
+  const { data, error } = await db
+    .from("payment_requests")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  if (error) {
+    box.innerHTML =
+      `<div style="color:#ff7185;">
+        Request load করা যায়নি: ${esc(error.message)}
+      </div>`;
+    return;
+  }
+
+  if (!data?.length) {
+    box.innerHTML =
+      `<div style="color:#8f9bb0;">
+        কোনো deposit request নেই।
+      </div>`;
+    return;
+  }
+
+  box.innerHTML = data.map(r => `
+    <div style="
+      background:#111722;
+      border:1px solid #293346;
+      border-radius:12px;
+      padding:14px;
+      margin-top:10px;
+    ">
+      <div>
+        <b>${esc(r.method || "-")}</b>
+        <span style="float:right;">
+          ৳${esc(r.amount ?? 0)}
+        </span>
+      </div>
+
+      <div style="
+        color:#8f9bb0;
+        font-size:12px;
+        margin-top:7px;
+      ">
+        TxID: ${esc(r.transaction_id || "-")}
+      </div>
+
+      <div style="
+        color:#8f9bb0;
+        font-size:12px;
+        margin-top:5px;
+      ">
+        User: ${esc(r.user_id || "-")}
+      </div>
+
+      <div style="
+        color:#f0b44d;
+        font-size:12px;
+        margin-top:6px;
+      ">
+        Status: ${esc(r.status || "pending")}
+      </div>
+
+      ${
+        r.status === "pending"
+          ? primaryBtn(
+              "Approve Deposit",
+              `approveDeposit(${r.id})`
+            )
+          : ""
+      }
+    </div>
+  `).join("");
+}
+
+async function approveDeposit(requestId) {
+  if (!(await isAdmin())) {
+    alert("Admin access denied.");
+    return;
+  }
+
+  if (!confirm("এই deposit request approve করবেন?")) {
+    return;
+  }
+
+  const { data, error } = await db.rpc(
+    "approve_deposit",
+    {
+      p_request_id: requestId
+    }
+  );
+
+  if (error) {
+    alert("Approve করা যায়নি: " + error.message);
+    return;
+  }
+
+  alert(
+    `Deposit approved successfully! Amount: ৳${data.amount}`
+  );
+
+  await loadAdminDepositRequests();
+}
+window.openAdmin = openAdmin;
 window.openWallet = openWallet;
 window.submitDepositRequest = submitDepositRequest;
 window.showProfile = showProfile;
