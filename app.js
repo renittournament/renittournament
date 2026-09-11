@@ -1,1919 +1,891 @@
-/* =========================================
-   RENIT TOURNAMENT
-   Supabase Auth + Tournament Frontend
-   ========================================= */
+const app = document.getElementById("app");
 
-const APP_KEY = "renit_tournament_v3";
-
-const matches = [
-  {
-    id: 1,
-    game: "BR MATCH",
-    title: "BR Solo #001",
-    fee: 20,
-    prize: 150,
-    slots: 48,
-    joined: 12,
-    time: "Today • 9:00 PM",
-    status: "OPEN"
-  },
-  {
-    id: 2,
-    game: "BR-DUO",
-    title: "BR Duo Night",
-    fee: 30,
-    prize: 250,
-    slots: 24,
-    joined: 8,
-    time: "Today • 10:00 PM",
-    status: "OPEN"
-  },
-  {
-    id: 3,
-    game: "FREE FIRE",
-    title: "Free Fire Clash",
-    fee: 10,
-    prize: 100,
-    slots: 48,
-    joined: 31,
-    time: "Tomorrow • 8:00 PM",
-    status: "OPEN"
-  },
-  {
-    id: 4,
-    game: "CS 4 VS 4",
-    title: "CS Squad War",
-    fee: 50,
-    prize: 500,
-    slots: 16,
-    joined: 12,
-    time: "Tomorrow • 10:00 PM",
-    status: "OPEN"
-  },
-  {
-    id: 5,
-    game: "LONE WOLF",
-    title: "Lone Wolf Challenge",
-    fee: 15,
-    prize: 120,
-    slots: 24,
-    joined: 5,
-    time: "Tomorrow • 9:00 PM",
-    status: "OPEN"
-  },
-  {
-    id: 6,
-    game: "SPECIAL MATCH",
-    title: "Special Night Cup",
-    fee: 25,
-    prize: 300,
-    slots: 32,
-    joined: 10,
-    time: "Friday • 10:00 PM",
-    status: "OPEN"
-  },
-  {
-    id: 7,
-    game: "CUSTOM 2VS2 HEADSHOOT",
-    title: "Custom 2VS2 Headshoot",
-    fee: 20,
-    prize: 200,
-    slots: 16,
-    joined: 4,
-    time: "Friday • 8:00 PM",
-    status: "OPEN"
-  },
-  {
-    id: 8,
-    game: "LONE WOLF HEADSHOOT",
-    title: "Lone Wolf Headshoot",
-    fee: 15,
-    prize: 150,
-    slots: 24,
-    joined: 6,
-    time: "Friday • 9:00 PM",
-    status: "OPEN"
-  },
-  {
-    id: 9,
-    game: "LOST TO WIN",
-    title: "Lost To Win",
-    fee: 10,
-    prize: 100,
-    slots: 48,
-    joined: 12,
-    time: "Saturday • 8:00 PM",
-    status: "OPEN"
-  },
-  {
-    id: 10,
-    game: "FREE MATCH",
-    title: "Free Match",
-    fee: 0,
-    prize: 100,
-    slots: 48,
-    joined: 10,
-    time: "Saturday • 9:00 PM",
-    status: "OPEN"
-  }
-];
-
-
-/* =========================================
-   SAFE SUPABASE CHECK
-   ========================================= */
-
-function getSupabase() {
-  if (
-    typeof window === "undefined" ||
-    !window.supabase ||
-    typeof window.supabase.createClient !== "function"
-  ) {
-    return null;
-  }
-
-  if (
-    typeof SUPABASE_URL === "undefined" ||
-    typeof SUPABASE_KEY === "undefined"
-  ) {
-    return null;
-  }
-
-  if (!SUPABASE_URL || !SUPABASE_KEY) {
-    return null;
-  }
-
-  try {
-    if (!window.__renitSupabase) {
-      window.__renitSupabase =
-        window.supabase.createClient(
-          SUPABASE_URL,
-          SUPABASE_KEY
-        );
-    }
-
-    return window.__renitSupabase;
-  } catch (error) {
-    console.error("Supabase error:", error);
-    return null;
-  }
+function showError(message) {
+  app.innerHTML = `
+    <div style="
+      min-height:100vh;
+      background:#080b12;
+      color:white;
+      padding:30px 20px;
+      font-family:Arial,sans-serif;
+      text-align:center;
+    ">
+      <h2 style="color:#ff4d67;">RENIT Tournament</h2>
+      <p style="color:#bbb;line-height:1.6;">${message}</p>
+    </div>
+  `;
 }
 
-const supabaseClient = getSupabase();
-
-
-/* =========================================
-   LOCAL STATE
-   ========================================= */
-
-function loadLocalState() {
-  try {
-    const saved = localStorage.getItem(APP_KEY);
-
-    if (saved) {
-      const data = JSON.parse(saved);
-
-      return {
-        balance:
-          typeof data.balance === "number"
-            ? data.balance
-            : 0,
-
-        joined:
-          Array.isArray(data.joined)
-            ? data.joined
-            : []
-      };
-    }
-  } catch (error) {
-    console.log("Local state error:", error);
-  }
-
-  return {
-    balance: 0,
-    joined: []
-  };
+if (!window.supabase) {
+  showError("Supabase library load হয়নি।");
+  throw new Error("Supabase library missing");
 }
 
-let state = loadLocalState();
-
-function saveLocalState() {
-  try {
-    localStorage.setItem(
-      APP_KEY,
-      JSON.stringify(state)
-    );
-  } catch (error) {
-    console.log("Save error:", error);
-  }
+if (!window.supabaseClient) {
+  showError("Supabase configuration পাওয়া যায়নি।");
+  throw new Error("supabaseClient missing");
 }
 
-
-/* =========================================
-   HELPERS
-   ========================================= */
-
-function esc(value) {
-  return String(value).replace(
-    /[&<>"']/g,
-    function (char) {
-      return {
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
-      }[char];
-    }
-  );
-}
-
-function app() {
-  return document.getElementById("app");
-}
-
-function toast(message) {
-  const old = document.querySelector(".toast");
-
-  if (old) {
-    old.remove();
-  }
-
-  const box = document.createElement("div");
-
-  box.className = "toast";
-  box.textContent = message;
-
-  document.body.appendChild(box);
-
-  setTimeout(function () {
-    if (box) {
-      box.remove();
-    }
-  }, 2200);
-}
-
-
-/* =========================================
-   AUTH
-   ========================================= */
+const db = window.supabaseClient;
 
 let currentUser = null;
+let currentProfile = null;
 
-async function getCurrentUser() {
-  if (!supabaseClient) {
-    return null;
-  }
+const games = [
+  "BR MATCH",
+  "BR-DUO",
+  "FREE FIRE",
+  "CS 4 VS 4",
+  "LONE WOLF",
+  "SPECIAL MATCH",
+  "CUSTOM 2VS2 HEADSHOOT",
+  "LONE WOLF HEADSHOOT",
+  "LOST TO WIN",
+  "FREE MATCH"
+];
 
-  try {
-    const result =
-      await supabaseClient.auth.getUser();
-
-    if (result.error) {
-      console.log(
-        "User check:",
-        result.error.message
-      );
-
-      return null;
-    }
-
-    return result.data.user || null;
-
-  } catch (error) {
-    console.error(error);
-    return null;
-  }
+function esc(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
+function pageShell(content) {
+  return `
+    <div style="
+      min-height:100vh;
+      background:#080b12;
+      color:#fff;
+      font-family:Arial,sans-serif;
+    ">
+      <header style="
+        padding:18px 16px;
+        background:#101521;
+        border-bottom:1px solid #202838;
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+      ">
+        <div>
+          <div style="font-size:21px;font-weight:800;">RENIT</div>
+          <div style="font-size:11px;color:#8892a5;">TOURNAMENT</div>
+        </div>
 
-/* =========================================
-   PROFILE
-   ========================================= */
+        <button onclick="showProfile()" style="
+          background:#171e2b;
+          color:white;
+          border:1px solid #293346;
+          border-radius:10px;
+          padding:9px 13px;
+        ">Profile</button>
+      </header>
 
-async function createProfile(user, username) {
-  if (!supabaseClient || !user) {
+      ${content}
+
+      <nav style="
+        position:fixed;
+        bottom:0;
+        left:0;
+        right:0;
+        background:#101521;
+        border-top:1px solid #202838;
+        display:flex;
+        justify-content:space-around;
+        padding:10px 4px;
+      ">
+        <button onclick="home()" style="${navBtn()}">Home</button>
+        <button onclick="showMatches()" style="${navBtn()}">Matches</button>
+        <button onclick="openWallet()" style="${navBtn()}">Wallet</button>
+        <button onclick="showResults()" style="${navBtn()}">Results</button>
+      </nav>
+    </div>
+  `;
+}
+
+function navBtn() {
+  return `
+    background:none;
+    border:0;
+    color:#cbd3e1;
+    font-size:12px;
+    padding:7px;
+  `;
+}
+
+function primaryBtn(text, action) {
+  return `
+    <button onclick="${action}" style="
+      width:100%;
+      background:#e94560;
+      color:white;
+      border:0;
+      border-radius:10px;
+      padding:13px;
+      font-size:15px;
+      font-weight:700;
+      margin-top:10px;
+    ">${text}</button>
+  `;
+}
+
+function inputField(type, id, placeholder) {
+  return `
+    <input
+      id="${id}"
+      type="${type}"
+      placeholder="${placeholder}"
+      style="
+        width:100%;
+        box-sizing:border-box;
+        background:#111722;
+        color:white;
+        border:1px solid #293346;
+        border-radius:10px;
+        padding:13px;
+        margin-top:10px;
+        outline:none;
+      "
+    >
+  `;
+}
+
+function loginPage() {
+  app.innerHTML = `
+    <div style="
+      min-height:100vh;
+      background:#080b12;
+      color:white;
+      padding:30px 20px;
+      font-family:Arial,sans-serif;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    ">
+      <div style="width:100%;max-width:420px;">
+        <div style="text-align:center;margin-bottom:25px;">
+          <div style="font-size:34px;font-weight:900;">RENIT</div>
+          <div style="color:#8892a5;margin-top:5px;">TOURNAMENT</div>
+        </div>
+
+        <div style="
+          background:#101521;
+          border:1px solid #202838;
+          border-radius:16px;
+          padding:20px;
+        ">
+          <h2 style="margin-top:0;">Login</h2>
+
+          ${inputField("email","loginEmail","Email")}
+          ${inputField("password","loginPassword","Password")}
+
+          ${primaryBtn("Login","login()")}
+
+          <button onclick="signupPage()" style="
+            width:100%;
+            margin-top:12px;
+            padding:12px;
+            background:transparent;
+            color:#cbd3e1;
+            border:1px solid #293346;
+            border-radius:10px;
+          ">Create Account</button>
+
+          <div id="authMessage" style="
+            margin-top:14px;
+            color:#9ba6b8;
+            font-size:13px;
+            text-align:center;
+          "></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function signupPage() {
+  app.innerHTML = `
+    <div style="
+      min-height:100vh;
+      background:#080b12;
+      color:white;
+      padding:30px 20px;
+      font-family:Arial,sans-serif;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    ">
+      <div style="width:100%;max-width:420px;">
+        <div style="text-align:center;margin-bottom:25px;">
+          <div style="font-size:34px;font-weight:900;">RENIT</div>
+          <div style="color:#8892a5;">CREATE ACCOUNT</div>
+        </div>
+
+        <div style="
+          background:#101521;
+          border:1px solid #202838;
+          border-radius:16px;
+          padding:20px;
+        ">
+          <h2 style="margin-top:0;">Create Account</h2>
+
+          ${inputField("text","signupUsername","Username")}
+          ${inputField("email","signupEmail","Email")}
+          ${inputField("password","signupPassword","Password")}
+
+          ${primaryBtn("Create Account","signup()")}
+
+          <button onclick="loginPage()" style="
+            width:100%;
+            margin-top:12px;
+            padding:12px;
+            background:transparent;
+            color:#cbd3e1;
+            border:1px solid #293346;
+            border-radius:10px;
+          ">Back to Login</button>
+
+          <div id="authMessage" style="
+            margin-top:14px;
+            color:#9ba6b8;
+            font-size:13px;
+            text-align:center;
+          "></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function login() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+
+  const msg = document.getElementById("authMessage");
+  msg.textContent = "Logging in...";
+
+  const { error } = await db.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    msg.textContent = error.message;
     return;
   }
 
-  try {
-    const { data: existing, error: findError } =
-      await supabaseClient
-        .from("Profiles")
-        .select("id, username")
-        .eq("id", user.id)
-        .maybeSingle();
+  await startApp();
+}
 
-    if (findError) {
-      console.log(
-        "Profile check:",
-        findError.message
-      );
-    }
+async function signup() {
+  const username = document.getElementById("signupUsername").value.trim();
+  const email = document.getElementById("signupEmail").value.trim();
+  const password = document.getElementById("signupPassword").value;
 
-    if (existing) {
-      return;
-    }
+  const msg = document.getElementById("authMessage");
 
-    const safeUsername =
-      username ||
-      user.email
-        ?.split("@")[0]
-        ?.replace(/[^a-zA-Z0-9_]/g, "")
-        ?.slice(0, 20) ||
-      "Player";
-
-    const { error } =
-      await supabaseClient
-        .from("Profiles")
-        .insert({
-          id: user.id,
-          username: safeUsername
-        });
-
-    if (error) {
-      console.log(
-        "Profile creation:",
-        error.message
-      );
-    }
-
-  } catch (error) {
-    console.log(
-      "Profile error:",
-      error
-    );
+  if (!username || !email || !password) {
+    msg.textContent = "সব ঘর পূরণ করুন।";
+    return;
   }
-}
 
-
-/* =========================================
-   LOGIN PAGE
-   ========================================= */
-
-function showAuth() {
-  app().innerHTML = `
-    <div class="shell">
-      <main>
-
-        <div class="hero" style="
-          margin-top:70px;
-          text-align:center;
-          padding:35px 20px;
-        ">
-          <div style="
-            font-size:50px;
-            margin-bottom:10px;
-          ">
-            🎮
-          </div>
-
-          <h1 style="
-            font-size:32px;
-            margin-bottom:8px;
-          ">
-            RENIT TOURNAMENT
-          </h1>
-
-          <p>
-            Login or create your account to continue.
-          </p>
-        </div>
-
-
-        <div class="card" style="
-          margin-top:20px;
-          padding:25px;
-        ">
-
-          <h2 id="authTitle">
-            Login
-          </h2>
-
-
-          <div id="usernameBox" style="
-            display:none;
-            margin-top:18px;
-          ">
-            <input
-              id="username"
-              type="text"
-              placeholder="Username"
-              autocomplete="username"
-              style="
-                width:100%;
-                box-sizing:border-box;
-              "
-            >
-          </div>
-
-
-          <div style="margin-top:18px;">
-            <input
-              id="email"
-              type="email"
-              placeholder="Email"
-              autocomplete="email"
-              style="
-                width:100%;
-                box-sizing:border-box;
-              "
-            >
-          </div>
-
-
-          <div style="margin-top:14px;">
-            <input
-              id="password"
-              type="password"
-              placeholder="Password"
-              autocomplete="current-password"
-              style="
-                width:100%;
-                box-sizing:border-box;
-              "
-            >
-          </div>
-
-
-          <button
-            id="authButton"
-            class="primary"
-            onclick="loginUser()"
-            style="
-              width:100%;
-              margin-top:18px;
-            "
-          >
-            Login
-          </button>
-
-
-          <button
-            id="switchButton"
-            class="join"
-            onclick="switchAuthMode()"
-            style="
-              width:100%;
-              margin-top:12px;
-            "
-          >
-            Create Account
-          </button>
-
-
-          <p
-            id="authMessage"
-            style="
-              margin-top:15px;
-              color:#9b94aa;
-              line-height:1.5;
-            "
-          >
-            Use a valid email address and password.
-          </p>
-
-        </div>
-
-      </main>
-    </div>
-  `;
-
-  window.authMode = "login";
-}
-
-
-function switchAuthMode() {
-  window.authMode =
-    window.authMode === "login"
-      ? "signup"
-      : "login";
-
-  const title =
-    document.getElementById("authTitle");
-
-  const button =
-    document.getElementById("authButton");
-
-  const switchButton =
-    document.getElementById("switchButton");
-
-  const usernameBox =
-    document.getElementById("usernameBox");
-
-  const message =
-    document.getElementById("authMessage");
-
-  if (window.authMode === "signup") {
-
-    title.textContent = "Create Account";
-
-    button.textContent = "Create Account";
-
-    button.onclick = signupUser;
-
-    switchButton.textContent = "Back to Login";
-
-    usernameBox.style.display = "block";
-
-    message.textContent =
-      "Create your RENIT Tournament player account.";
-
-  } else {
-
-    title.textContent = "Login";
-
-    button.textContent = "Login";
-
-    button.onclick = loginUser;
-
-    switchButton.textContent = "Create Account";
-
-    usernameBox.style.display = "none";
-
-    message.textContent =
-      "Use a valid email address and password.";
+  if (password.length < 6) {
+    msg.textContent = "Password কমপক্ষে 6 characters হতে হবে।";
+    return;
   }
+
+  msg.textContent = "Account তৈরি হচ্ছে...";
+
+  const { data, error } = await db.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        username: username
+      }
+    }
+  });
+
+  if (error) {
+    msg.textContent = error.message;
+    return;
+  }
+
+  if (data.user && !data.session) {
+    msg.textContent =
+      "Account created. Email confirmation করে তারপর Login করুন।";
+    return;
+  }
+
+  await startApp();
 }
 
+async function loadProfile() {
+  if (!currentUser) return null;
 
-/* =========================================
-   SIGN UP
-   ========================================= */
+  const { data, error } = await db
+    .from("Profiles")
+    .select("*")
+    .eq("id", currentUser.id)
+    .maybeSingle();
 
-async function signupUser() {
+  if (error) {
+    console.log("Profile error:", error);
+    return null;
+  }
 
-  const email =
-    document.getElementById("email")
-      ?.value
-      .trim();
-
-  const password =
-    document.getElementById("password")
-      ?.value;
+  if (data) {
+    return data;
+  }
 
   const username =
-    document.getElementById("username")
-      ?.value
-      .trim();
-
-  const message =
-    document.getElementById("authMessage");
-
-
-  if (!supabaseClient) {
-    message.textContent =
-      "Supabase connection is not available.";
-
-    return;
-  }
-
-
-  if (!username) {
-    message.textContent =
-      "Please enter a username.";
-
-    return;
-  }
-
-
-  if (!email) {
-    message.textContent =
-      "Please enter your email.";
-
-    return;
-  }
-
-
-  if (!password || password.length < 6) {
-    message.textContent =
-      "Password must be at least 6 characters.";
-
-    return;
-  }
-
-
-  message.textContent =
-    "Creating your account...";
-
-
-  try {
-
-    const { data, error } =
-      await supabaseClient.auth.signUp({
-        email: email,
-        password: password
-      });
-
-
-    if (error) {
-      console.error(error);
-
-      message.textContent =
-        error.message;
-
-      return;
-    }
-
-
-    if (!data.user) {
-      message.textContent =
-        "Account could not be created.";
-
-      return;
-    }
-
-
-    /*
-      If email confirmation is OFF,
-      session will exist immediately.
-    */
-
-    if (data.session) {
-
-      currentUser = data.user;
-
-      await createProfile(
-        data.user,
-        username
-      );
-
-      toast("Account created successfully!");
-
-      await startApp();
-
-      return;
-    }
-
-
-    /*
-      Email confirmation is ON.
-    */
-
-    message.innerHTML = `
-      <b style="color:#fff;">
-        Account created successfully.
-      </b>
-      <br><br>
-      Please check your email and confirm
-      your account.
-      <br><br>
-      After confirmation, come back and Login.
-    `;
-
-  } catch (error) {
-
-    console.error(error);
-
-    message.textContent =
-      "Something went wrong. Please try again.";
-  }
-}
-
-
-/* =========================================
-   LOGIN
-   ========================================= */
-
-async function loginUser() {
-
-  const email =
-    document.getElementById("email")
-      ?.value
-      .trim();
-
-  const password =
-    document.getElementById("password")
-      ?.value;
-
-  const message =
-    document.getElementById("authMessage");
-
-
-  if (!supabaseClient) {
-    message.textContent =
-      "Supabase connection is not available.";
-
-    return;
-  }
-
-
-  if (!email || !password) {
-    message.textContent =
-      "Please enter email and password.";
-
-    return;
-  }
-
-
-  message.textContent =
-    "Logging in...";
-
-
-  try {
-
-    const { data, error } =
-      await supabaseClient.auth.signInWithPassword({
-        email: email,
-        password: password
-      });
-
-
-    if (error) {
-
-      console.error(error);
-
-      message.textContent =
-        error.message;
-
-      return;
-    }
-
-
-    if (!data.user) {
-
-      message.textContent =
-        "Login failed.";
-
-      return;
-    }
-
-
-    currentUser = data.user;
-
-
-    await createProfile(
-      data.user,
-      data.user.email
-        ?.split("@")[0]
-    );
-
-
-    toast("Login successful!");
-
-    await startApp();
-
-  } catch (error) {
-
-    console.error(error);
-
-    message.textContent =
-      "Login failed. Please try again.";
-  }
-}
-
-
-/* =========================================
-   HOME
-   ========================================= */
-
-function home() {
-
-  const userName =
-    currentUser?.email
-      ?.split("@")[0] ||
+    currentUser.user_metadata?.username ||
+    currentUser.email?.split("@")[0] ||
     "Player";
 
+  const { data: newProfile, error: insertError } = await db
+    .from("Profiles")
+    .insert({
+      id: currentUser.id,
+      username: username,
+      email: currentUser.email,
+      balance: 0
+    })
+    .select()
+    .single();
 
-  app().innerHTML = `
-    <div class="shell">
+  if (insertError) {
+    console.log("Profile create error:", insertError);
+    return null;
+  }
 
-      <header class="header">
-
-        <div class="logo">
-          🎮
-        </div>
-
-        <div class="brand">
-          <b>RENIT TOURNAMENT</b>
-          <small>
-            Play • Compete • Win
-          </small>
-        </div>
-
-        <button
-          class="wallet"
-          onclick="openWallet()"
-        >
-          ৳ ${state.balance}
-        </button>
-
-      </header>
-
-
-      <main>
-
-        <div class="hero">
-
-          <h1>
-            Ready to compete?
-          </h1>
-
-          <p>
-            Welcome, ${esc(userName)}
-          </p>
-
-          <div class="chips">
-
-            <button
-              class="chip active"
-              onclick="filterHome('ALL', this)"
-            >
-              All
-            </button>
-
-            <button
-              class="chip"
-              onclick="filterHome('BR MATCH', this)"
-            >
-              BR
-            </button>
-
-            <button
-              class="chip"
-              onclick="filterHome('BR-DUO', this)"
-            >
-              Duo
-            </button>
-
-            <button
-              class="chip"
-              onclick="filterHome('FREE FIRE', this)"
-            >
-              Free Fire
-            </button>
-
-            <button
-              class="chip"
-              onclick="filterHome('CS 4 VS 4', this)"
-            >
-              CS
-            </button>
-
-          </div>
-
-        </div>
-
-
-        <div class="section">
-
-          <h2>
-            Games
-          </h2>
-
-          <button
-            class="link"
-            onclick="showMatches()"
-          >
-            All Matches
-          </button>
-
-        </div>
-
-
-        <section class="grid">
-
-          ${getGames()
-            .map(function (game) {
-
-              const count =
-                matches.filter(function (match) {
-                  return match.game === game;
-                }).length;
-
-              return `
-                <article
-                  class="game"
-                  onclick="showMatches('${esc(game)}')"
-                >
-
-                  <div>
-                    <b>
-                      ${esc(game)}
-                    </b>
-
-                    <small>
-                      ${count}
-                      ${count === 1 ? "match" : "matches"}
-                    </small>
-                  </div>
-
-                </article>
-              `;
-
-            })
-            .join("")}
-
-        </section>
-
-
-        <div class="section">
-
-          <h2>
-            Upcoming Matches
-          </h2>
-
-          <button
-            class="link"
-            onclick="showMatches()"
-          >
-            View all
-          </button>
-
-        </div>
-
-
-        <div id="homeMatches">
-
-          ${matches
-            .slice(0, 3)
-            .map(matchCard)
-            .join("")}
-
-        </div>
-
-
-        <button
-          class="join"
-          onclick="logoutUser()"
-          style="
-            width:100%;
-            margin-top:25px;
-          "
-        >
-          Logout
-        </button>
-
-      </main>
-
-
-      ${navigation("home")}
-
-    </div>
-  `;
+  return newProfile;
 }
 
-
-/* =========================================
-   GAMES
-   ========================================= */
-
-function getGames() {
-
-  return [
-    "BR MATCH",
-    "BR-DUO",
-    "FREE FIRE",
-    "CS 4 VS 4",
-    "LONE WOLF",
-    "SPECIAL MATCH",
-    "CUSTOM 2VS2 HEADSHOOT",
-    "LONE WOLF HEADSHOOT",
-    "LOST TO WIN",
-    "FREE MATCH"
-  ];
-
-}
-
-
-/* =========================================
-   MATCH CARD
-   ========================================= */
-
-function matchCard(match) {
-
-  const full =
-    match.joined >= match.slots;
-
-  const alreadyJoined =
-    state.joined.includes(match.id);
-
-
-  return `
-    <article class="match">
-
-      <div class="matchtop">
-
-        <h3>
-          ${esc(match.title)}
-        </h3>
-
-        <span class="status">
-          ${
-            full
-              ? "FULL"
-              : esc(match.status)
-          }
-        </span>
-
-      </div>
-
-
-      <p style="
-        color:#9b94aa;
-        margin-top:5px;
-      ">
-        ${esc(match.game)}
-        •
-        ${esc(match.time)}
-      </p>
-
-
-      <div class="meta">
-
-        <div>
-          <span>
-            Entry
-          </span>
-
-          <b>
-            ${
-              match.fee === 0
-                ? "FREE"
-                : "৳" + match.fee
-            }
-          </b>
-        </div>
-
-
-        <div>
-          <span>
-            Prize
-          </span>
-
-          <b>
-            ৳${match.prize}
-          </b>
-        </div>
-
-
-        <div>
-          <span>
-            Slots
-          </span>
-
-          <b>
-            ${match.joined}/${match.slots}
-          </b>
-        </div>
-
-      </div>
-
-
-      <button
-        class="join"
-        onclick="openMatch(${match.id})"
-        ${
-          full
-            ? "disabled"
-            : ""
-        }
-      >
-
-        ${
-          full
-            ? "Full"
-            : alreadyJoined
-            ? "Joined"
-            : "View & Join"
-        }
-
-      </button>
-
-    </article>
-  `;
-}
-
-
-/* =========================================
-   MATCHES
-   ========================================= */
-
-function showMatches(game) {
-
-  const selected =
-    game || "ALL";
-
-
-  const list =
-    matches.filter(function (match) {
-
-      return (
-        selected === "ALL" ||
-        match.game === selected
-      );
-
-    });
-
-
-  app().innerHTML = `
-    <div class="shell">
-
-      <header class="header">
-
-        <div class="logo">
-          🎮
-        </div>
-
-        <div class="brand">
-
-          <b>
-            Matches
-          </b>
-
-          <small>
-            Choose your tournament
-          </small>
-
-        </div>
-
-        <button
-          class="wallet"
-          onclick="openWallet()"
-        >
-          ৳ ${state.balance}
-        </button>
-
-      </header>
-
-
-      <main>
-
-        <div class="adminbar">
-
-          <button onclick="showMatches()">
-            All
-          </button>
-
-          <button onclick="showMatches('BR MATCH')">
-            BR
-          </button>
-
-          <button onclick="showMatches('BR-DUO')">
-            Duo
-          </button>
-
-          <button onclick="showMatches('FREE FIRE')">
-            Free Fire
-          </button>
-
-          <button onclick="showMatches('CS 4 VS 4')">
-            CS
-          </button>
-
-          <button onclick="showMatches('LONE WOLF')">
-            Lone Wolf
-          </button>
-
-          <button onclick="showMatches('SPECIAL MATCH')">
-            Special
-          </button>
-
-          <button onclick="showMatches('CUSTOM 2VS2 HEADSHOOT')">
-            2VS2
-          </button>
-
-          <button onclick="showMatches('LONE WOLF HEADSHOOT')">
-            LW HS
-          </button>
-
-          <button onclick="showMatches('LOST TO WIN')">
-            Lost
-          </button>
-
-          <button onclick="showMatches('FREE MATCH')">
-            Free
-          </button>
-
-        </div>
-
-
-        <h2 style="margin-bottom:20px;">
-          ${
-            selected === "ALL"
-              ? "All Matches"
-              : esc(selected)
-          }
-        </h2>
-
-
-        ${
-          list.length
-            ? list
-                .map(matchCard)
-                .join("")
-            : `
-              <div class="empty">
-                No matches available.
-              </div>
-            `
-        }
-
-      </main>
-
-
-      ${navigation("matches")}
-
-    </div>
-  `;
-}
-
-
-/* =========================================
-   OPEN MATCH
-   ========================================= */
-
-function openMatch(id) {
-
-  const match =
-    matches.find(function (item) {
-      return item.id === id;
-    });
-
-
-  if (!match) {
-
-    toast("Match not found");
-
+async function startApp() {
+  const { data, error } = await db.auth.getSession();
+
+  if (error) {
+    showError(error.message);
     return;
   }
 
+  currentUser = data.session?.user || null;
 
-  const joined =
-    state.joined.includes(id);
-
-
-  openModal(`
-
-    <button
-      class="close"
-      onclick="closeModal()"
-    >
-      ✕
-    </button>
-
-
-    <h2>
-      ${esc(match.title)}
-    </h2>
-
-
-    <p style="
-      color:#9b94aa;
-      margin-top:6px;
-    ">
-      ${esc(match.game)}
-      •
-      ${esc(match.time)}
-    </p>
-
-
-    <div class="meta">
-
-      <div>
-        <span>
-          Entry
-        </span>
-
-        <b>
-          ${
-            match.fee === 0
-              ? "FREE"
-              : "৳" + match.fee
-          }
-        </b>
-      </div>
-
-
-      <div>
-        <span>
-          Prize
-        </span>
-
-        <b>
-          ৳${match.prize}
-        </b>
-      </div>
-
-
-      <div>
-        <span>
-          Players
-        </span>
-
-        <b>
-          ${match.joined}/${match.slots}
-        </b>
-      </div>
-
-    </div>
-
-
-    ${
-      joined
-
-        ? `
-          <button
-            class="primary"
-            disabled
-          >
-            Already Joined
-          </button>
-        `
-
-        : `
-          <button
-            class="primary"
-            onclick="joinMatch(${match.id})"
-          >
-            ${
-              match.fee === 0
-                ? "Join Free Match"
-                : "Join for ৳" + match.fee
-            }
-          </button>
-        `
-    }
-
-  `);
-}
-
-
-/* =========================================
-   JOIN MATCH
-   ========================================= */
-
-function joinMatch(id) {
-
-  const match =
-    matches.find(function (item) {
-      return item.id === id;
-    });
-
-
-  if (!match) {
-    toast("Match not found");
+  if (!currentUser) {
+    loginPage();
     return;
   }
 
-
-  if (state.joined.includes(id)) {
-
-    toast("Already joined");
-
-    return;
-  }
-
-
-  if (state.balance < match.fee) {
-
-    toast(
-      "Not enough wallet balance"
-    );
-
-    return;
-  }
-
-
-  state.balance -= match.fee;
-
-  state.joined.push(id);
-
-  saveLocalState();
-
-  closeModal();
-
-  toast(
-    "Joined successfully!"
-  );
+  currentProfile = await loadProfile();
 
   home();
 }
 
-
-/* =========================================
-   WALLET
-   ========================================= */
-
-function openWallet() {
-
-  openModal(`
-
-    <button
-      class="close"
-      onclick="closeModal()"
-    >
-      ✕
-    </button>
-
-
-    <h2>
-      Wallet
-    </h2>
-
-
-    <p style="
-      margin:15px 0;
-      color:#b9b1c3;
-    ">
-      Current balance:
-      <b>
-        ৳${state.balance}
-      </b>
-    </p>
-
-
-    <p style="
-      color:#8f879d;
-      line-height:1.6;
-    ">
-      Real wallet and payment system
-      will be connected to Supabase
-      transactions and bKash/Nagad
-      gateway.
-    </p>
-
-  `);
-}
-
-
-/* =========================================
-   RESULTS
-   ========================================= */
-
-function showResults() {
-
-  app().innerHTML = `
-    <div class="shell">
-
-      <header class="header">
-
-        <div class="logo">
-          🏆
-        </div>
-
-        <div class="brand">
-
-          <b>
-            Results
-          </b>
-
-          <small>
-            Tournament results
-          </small>
-
-        </div>
-
-      </header>
-
-
-      <main>
-
-        <div class="empty">
-
-          Results will appear here
-          after tournaments finish.
-
-        </div>
-
-      </main>
-
-
-      ${navigation("results")}
-
-    </div>
-  `;
-}
-
-
-/* =========================================
-   PROFILE
-   ========================================= */
-
-async function showProfile() {
-
-  const email =
-    currentUser?.email ||
-    "Player";
-
-
-  let username =
-    email.split("@")[0];
-
-
-  if (supabaseClient && currentUser) {
-
-    try {
-
-      const { data } =
-        await supabaseClient
-          .from("Profiles")
-          .select("username")
-          .eq("id", currentUser.id)
-          .maybeSingle();
-
-
-      if (data?.username) {
-        username = data.username;
-      }
-
-    } catch (error) {
-
-      console.log(
-        "Profile loading:",
-        error
-      );
-
-    }
-  }
-
-
-  const joinedMatches =
-    state.joined
-      .map(function (id) {
-
-        return matches.find(
-          function (match) {
-            return match.id === id;
-          }
-        );
-
-      })
-      .filter(Boolean);
-
-
-  app().innerHTML = `
-    <div class="shell">
-
-      <header class="header">
-
-        <div class="logo">
-          👤
-        </div>
-
-        <div class="brand">
-
-          <b>
-            ${esc(username)}
-          </b>
-
-          <small>
-            ${esc(email)}
-          </small>
-
-        </div>
-
-      </header>
-
-
-      <main>
-
-        <div class="hero">
-
-          <h1>
-            ৳ ${state.balance}
-          </h1>
-
-          <p>
-            Wallet balance
-          </p>
-
-          <button
-            class="primary"
-            onclick="openWallet()"
-          >
-            Wallet
-          </button>
-
-        </div>
-
-
-        <div class="section">
-
-          <h2>
-            My Matches
-          </h2>
-
-        </div>
-
-
-        ${
-          joinedMatches.length
-
-            ? joinedMatches
-                .map(matchCard)
-                .join("")
-
-            : `
-              <div class="empty">
-                You have not joined any
-                match yet.
-              </div>
-            `
-        }
-
-
-        <button
-          class="join"
-          onclick="logoutUser()"
-          style="
-            width:100%;
-            margin-top:25px;
-          "
-        >
-          Logout
-        </button>
-
-      </main>
-
-
-      ${navigation("profile")}
-
-    </div>
-  `;
-}
-
-
-/* =========================================
-   NAVIGATION
-   ========================================= */
-
-function navigation(active) {
-
-  return `
-    <nav class="nav">
-
-      <button
-        class="${active === "home" ? "active" : ""}"
-        onclick="home()"
-      >
-        <i>⌂</i>
-        Home
-      </button>
-
-
-      <button
-        class="${active === "matches" ? "active" : ""}"
-        onclick="showMatches()"
-      >
-        <i>🎮</i>
-        Matches
-      </button>
-
-
-      <button
-        class="${active === "results" ? "active" : ""}"
-        onclick="showResults()"
-      >
-        <i>🏆</i>
-        Results
-      </button>
-
-
-      <button
-        class="${active === "profile" ? "active" : ""}"
-        onclick="showProfile()"
-      >
-        <i>👤</i>
-        Profile
-      </button>
-
-    </nav>
-  `;
-}
-
-
-/* =========================================
-   HOME FILTER
-   ========================================= */
-
-function filterHome(game, button) {
-
-  document
-    .querySelectorAll(".chip")
-    .forEach(function (chip) {
-
-      chip.classList.remove(
-        "active"
-      );
-
-    });
-
-
-  if (button) {
-    button.classList.add("active");
-  }
-
-
-  const list =
-    matches.filter(function (match) {
-
-      return (
-        game === "ALL" ||
-        match.game === game
-      );
-
-    });
-
-
-  const container =
-    document.getElementById(
-      "homeMatches"
-    );
-
-
-  if (!container) {
+function home() {
+  if (!currentUser) {
+    loginPage();
     return;
   }
 
-
-  container.innerHTML =
-    list.length
-
-      ? list
-          .map(matchCard)
-          .join("")
-
-      : `
-        <div class="empty">
-          No matches.
+  app.innerHTML = pageShell(`
+    <main style="padding:18px 16px 90px;">
+      <div style="
+        background:linear-gradient(135deg,#151d2d,#0f1420);
+        border:1px solid #263044;
+        border-radius:16px;
+        padding:20px;
+      ">
+        <div style="color:#8f9bb0;font-size:13px;">WELCOME</div>
+        <h2 style="margin:7px 0;">
+          ${esc(currentProfile?.username || "Player")}
+        </h2>
+        <div style="color:#9ba6b8;font-size:13px;">
+          Ready for your next tournament?
         </div>
-      `;
+      </div>
+
+      <h3 style="margin-top:25px;">Game Categories</h3>
+
+      <div style="
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:10px;
+      ">
+        ${games.map(game => `
+          <button onclick="showGameMatches('${esc(game)}')" style="
+            background:#111722;
+            color:white;
+            border:1px solid #263044;
+            border-radius:12px;
+            padding:17px 8px;
+            min-height:70px;
+            font-weight:700;
+          ">
+            ${esc(game)}
+          </button>
+        `).join("")}
+      </div>
+    </main>
+  `);
 }
 
+async function getTournaments(game = null) {
+  let query = db
+    .from("tournaments")
+    .select("*")
+    .order("created_at", { ascending: false });
 
-/* =========================================
-   MODAL
-   ========================================= */
+  const { data, error } = await query;
 
-function openModal(html) {
+  if (error) {
+    console.log("Tournament query:", error);
+    return [];
+  }
 
-  closeModal();
+  if (!game) return data || [];
 
+  return (data || []).filter(t => {
+    const value =
+      t.game ||
+      t.game_name ||
+      t.category ||
+      t.type ||
+      "";
 
-  const modal =
-    document.createElement("div");
+    return String(value).toUpperCase() === game.toUpperCase();
+  });
+}
 
+function tournamentTitle(t) {
+  return (
+    t.title ||
+    t.name ||
+    t.tournament_name ||
+    "Tournament"
+  );
+}
 
-  modal.className =
-    "modal";
+function tournamentGame(t) {
+  return (
+    t.game ||
+    t.game_name ||
+    t.category ||
+    t.type ||
+    "Tournament"
+  );
+}
 
+function tournamentFee(t) {
+  return (
+    t.entry_fee ??
+    t.fee ??
+    t.join_fee ??
+    0
+  );
+}
 
-  modal.id =
-    "modal";
+function tournamentPrize(t) {
+  return (
+    t.prize_pool ??
+    t.prize ??
+    t.reward ??
+    0
+  );
+}
 
+function tournamentSlots(t) {
+  return (
+    t.slots ??
+    t.max_slots ??
+    t.total_slots ??
+    0
+  );
+}
 
-  modal.innerHTML = `
-    <div class="sheet">
-      ${html}
+async function showMatches() {
+  const matches = await getTournaments();
+
+  app.innerHTML = pageShell(`
+    <main style="padding:18px 16px 90px;">
+      <h2>All Matches</h2>
+
+      ${
+        matches.length
+        ? matches.map(matchCard).join("")
+        : `
+          <div style="
+            background:#101521;
+            border:1px solid #202838;
+            border-radius:14px;
+            padding:25px;
+            text-align:center;
+            color:#8f9bb0;
+          ">
+            এখনো কোনো tournament publish করা হয়নি।
+          </div>
+        `
+      }
+    </main>
+  `);
+}
+
+async function showGameMatches(game) {
+  const matches = await getTournaments(game);
+
+  app.innerHTML = pageShell(`
+    <main style="padding:18px 16px 90px;">
+      <button onclick="home()" style="
+        background:none;
+        border:0;
+        color:#9ba6b8;
+        padding:0;
+        margin-bottom:15px;
+      ">← Back</button>
+
+      <h2>${esc(game)}</h2>
+
+      ${
+        matches.length
+        ? matches.map(matchCard).join("")
+        : `
+          <div style="
+            background:#101521;
+            border:1px solid #202838;
+            border-radius:14px;
+            padding:25px;
+            text-align:center;
+            color:#8f9bb0;
+          ">
+            এই category-তে এখন কোনো tournament নেই।
+          </div>
+        `
+      }
+    </main>
+  `);
+}
+
+function matchCard(t) {
+  const title = tournamentTitle(t);
+  const game = tournamentGame(t);
+  const fee = tournamentFee(t);
+  const prize = tournamentPrize(t);
+  const slots = tournamentSlots(t);
+
+  return `
+    <div style="
+      background:#101521;
+      border:1px solid #202838;
+      border-radius:14px;
+      padding:16px;
+      margin-bottom:12px;
+    ">
+      <div style="
+        color:#8f9bb0;
+        font-size:12px;
+        margin-bottom:6px;
+      ">${esc(game)}</div>
+
+      <h3 style="margin:0 0 12px;">
+        ${esc(title)}
+      </h3>
+
+      <div style="
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:8px;
+        color:#b8c1d1;
+        font-size:13px;
+      ">
+        <div>Entry: ৳${esc(fee)}</div>
+        <div>Prize: ৳${esc(prize)}</div>
+        <div>Slots: ${esc(slots)}</div>
+        <div>Status: Open</div>
+      </div>
+
+      ${primaryBtn(
+        "View & Join",
+        `openMatch('${esc(t.id || "")}')`
+      )}
     </div>
   `;
-
-
-  document.body.appendChild(
-    modal
-  );
 }
 
+async function openMatch(id) {
+  const { data, error } = await db
+    .from("tournaments")
+    .select("*")
+    .eq("id", id)
+    .single();
 
-function closeModal() {
-
-  const modal =
-    document.getElementById(
-      "modal"
-    );
-
-
-  if (modal) {
-    modal.remove();
-  }
-}
-
-
-/* =========================================
-   LOGOUT
-   ========================================= */
-
-async function logoutUser() {
-
-  if (supabaseClient) {
-
-    try {
-
-      await supabaseClient.auth.signOut();
-
-    } catch (error) {
-
-      console.log(
-        "Logout:",
-        error
-      );
-
-    }
+  if (error || !data) {
+    alert("Tournament পাওয়া যায়নি।");
+    return;
   }
 
+  const title = tournamentTitle(data);
+  const game = tournamentGame(data);
+  const fee = tournamentFee(data);
+  const prize = tournamentPrize(data);
+  const slots = tournamentSlots(data);
 
-  currentUser = null;
+  app.innerHTML = pageShell(`
+    <main style="padding:18px 16px 90px;">
+      <button onclick="showMatches()" style="
+        background:none;
+        border:0;
+        color:#9ba6b8;
+        padding:0;
+        margin-bottom:15px;
+      ">← Back</button>
 
-  showAuth();
+      <div style="
+        background:#101521;
+        border:1px solid #202838;
+        border-radius:16px;
+        padding:20px;
+      ">
+        <div style="color:#8f9bb0;font-size:12px;">
+          ${esc(game)}
+        </div>
 
-  toast(
-    "Logged out successfully"
-  );
+        <h2>${esc(title)}</h2>
+
+        <p>Entry Fee: <b>৳${esc(fee)}</b></p>
+        <p>Prize Pool: <b>৳${esc(prize)}</b></p>
+        <p>Slots: <b>${esc(slots)}</b></p>
+
+        ${primaryBtn(
+          "Join Tournament",
+          `joinTournament('${esc(data.id)}')`
+        )}
+      </div>
+    </main>
+  `);
 }
 
-
-/* =========================================
-   START APP
-   ========================================= */
-
-async function startApp() {
-
-  try {
-
-    currentUser =
-      await getCurrentUser();
-
-
-    if (!currentUser) {
-
-      showAuth();
-
-      return;
-    }
-
-
-    await createProfile(
-      currentUser,
-      currentUser.email
-        ?.split("@")[0]
-    );
-
-
-    home();
-
-  } catch (error) {
-
-    console.error(
-      "START APP ERROR:",
-      error
-    );
-
-
-    /*
-      VERY IMPORTANT:
-      Even if Supabase has an error,
-      the page will NOT remain blank.
-    */
-
-    showAuth();
+async function joinTournament(id) {
+  if (!currentUser) {
+    loginPage();
+    return;
   }
+
+  const { data: existing } = await db
+    .from("registrations")
+    .select("*")
+    .eq("tournament_id", id)
+    .eq("user_id", currentUser.id)
+    .maybeSingle();
+
+  if (existing) {
+    alert("আপনি ইতিমধ্যে এই tournament-এ joined আছেন।");
+    return;
+  }
+
+  const { error } = await db
+    .from("registrations")
+    .insert({
+      tournament_id: id,
+      user_id: currentUser.id
+    });
+
+  if (error) {
+    alert("Join করা যায়নি: " + error.message);
+    return;
+  }
+
+  alert("Tournament joined successfully!");
 }
 
+async function showResults() {
+  const { data, error } = await db
+    .from("results")
+    .select("*")
+    .order("created_at", { ascending: false });
 
-/* =========================================
-   AUTH STATE LISTENER
-   ========================================= */
+  if (error) {
+    console.log(error);
+  }
 
-if (supabaseClient) {
+  app.innerHTML = pageShell(`
+    <main style="padding:18px 16px 90px;">
+      <h2>Results</h2>
 
-  supabaseClient.auth.onAuthStateChange(
-    function (event, session) {
-
-      console.log(
-        "Auth event:",
-        event
-      );
-
-      if (session?.user) {
-        currentUser =
-          session.user;
+      ${
+        data?.length
+        ? data.map(r => `
+          <div style="
+            background:#101521;
+            border:1px solid #202838;
+            border-radius:14px;
+            padding:15px;
+            margin-bottom:10px;
+          ">
+            <b>${esc(r.username || r.player_name || "Player")}</b>
+            <div style="color:#9ba6b8;margin-top:6px;">
+              Rank: ${esc(r.rank ?? "-")}
+            </div>
+            <div style="color:#9ba6b8;">
+              Prize: ৳${esc(r.prize ?? r.amount ?? 0)}
+            </div>
+          </div>
+        `).join("")
+        : `
+          <div style="
+            background:#101521;
+            border:1px solid #202838;
+            border-radius:14px;
+            padding:25px;
+            text-align:center;
+            color:#8f9bb0;
+          ">
+            এখনো কোনো result নেই।
+          </div>
+        `
       }
-
-    }
-  );
-
+    </main>
+  `);
 }
 
+async function openWallet() {
+  currentProfile = await loadProfile();
 
-/* =========================================
-   ESCAPE KEY
-   ========================================= */
+  app.innerHTML = pageShell(`
+    <main style="padding:18px 16px 90px;">
+      <h2>Wallet</h2>
 
-document.addEventListener(
-  "keydown",
-  function (event) {
+      <div style="
+        background:#101521;
+        border:1px solid #202838;
+        border-radius:16px;
+        padding:22px;
+      ">
+        <div style="color:#8f9bb0;font-size:13px;">
+          Available Balance
+        </div>
 
-    if (event.key === "Escape") {
-      closeModal();
-    }
+        <div style="
+          font-size:34px;
+          font-weight:800;
+          margin-top:7px;
+        ">
+          ৳${esc(currentProfile?.balance ?? 0)}
+        </div>
+      </div>
 
+      <div style="
+        margin-top:15px;
+        background:#101521;
+        border:1px solid #202838;
+        border-radius:14px;
+        padding:16px;
+        color:#9ba6b8;
+        line-height:1.6;
+      ">
+        Deposit / withdrawal system এখনো payment gateway-এর সাথে
+        connect করা হয়নি।
+      </div>
+    </main>
+  `);
+}
+
+async function showProfile() {
+  currentProfile = await loadProfile();
+
+  app.innerHTML = pageShell(`
+    <main style="padding:18px 16px 90px;">
+      <h2>Profile</h2>
+
+      <div style="
+        background:#101521;
+        border:1px solid #202838;
+        border-radius:16px;
+        padding:20px;
+      ">
+        <div style="color:#8f9bb0;font-size:12px;">
+          USERNAME
+        </div>
+
+        <div style="
+          font-size:21px;
+          font-weight:700;
+          margin-top:5px;
+        ">
+          ${esc(currentProfile?.username || "Player")}
+        </div>
+
+        <div style="
+          color:#8f9bb0;
+          margin-top:15px;
+          font-size:13px;
+        ">
+          ${esc(currentUser?.email || "")}
+        </div>
+
+        <div style="
+          color:#8f9bb0;
+          margin-top:10px;
+          font-size:13px;
+        ">
+          Balance: ৳${esc(currentProfile?.balance ?? 0)}
+        </div>
+
+        <button onclick="logout()" style="
+          width:100%;
+          margin-top:20px;
+          padding:13px;
+          background:#171e2b;
+          color:#ff6178;
+          border:1px solid #303a4d;
+          border-radius:10px;
+          font-weight:700;
+        ">
+          Logout
+        </button>
+      </div>
+    </main>
+  `);
+}
+
+async function logout() {
+  await db.auth.signOut();
+  currentUser = null;
+  currentProfile = null;
+  loginPage();
+}
+
+window.home = home;
+window.showMatches = showMatches;
+window.showGameMatches = showGameMatches;
+window.openMatch = openMatch;
+window.joinTournament = joinTournament;
+window.showResults = showResults;
+window.openWallet = openWallet;
+window.showProfile = showProfile;
+window.login = login;
+window.signup = signup;
+window.signupPage = signupPage;
+window.loginPage = loginPage;
+window.logout = logout;
+
+window.addEventListener("error", function(event) {
+  console.error(event.error || event.message);
+});
+
+db.auth.onAuthStateChange(async (_event, session) => {
+  currentUser = session?.user || null;
+
+  if (currentUser) {
+    currentProfile = await loadProfile();
   }
-);
+});
 
-
-/* =========================================
-   START
-   ========================================= */
-
-startApp();
+startApp().catch(error => {
+  console.error(error);
+  showError(
+    "App চালু করতে সমস্যা হয়েছে।<br><br>" +
+    esc(error.message || error)
+  );
+});
