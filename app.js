@@ -1956,6 +1956,7 @@ async function approveDeposit(requestId) {
 }
 window.openAdmin = openAdmin;
 window.openWallet = openWallet;
+window.saveTournamentResult = saveTournamentResult;
 window.publishTournamentRoom = publishTournamentRoom;
 window.submitDepositRequest = submitDepositRequest;
 window.showProfile = showProfile;
