@@ -1777,6 +1777,7 @@ async function openAdmin() {
     await loadAdminDepositRequests();
   await loadRoomTournaments();
   await loadResultTournaments();
+  await loadStatusTournaments();
 }
 async function loadStatusTournaments() {
   const select =
