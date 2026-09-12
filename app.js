@@ -658,6 +658,22 @@ function matchCard(t) {
       <div style="margin-top:8px;">
         Start: ${esc(tournamentStartTime(t))}
       </div>
+      <div
+  id="countdown-${esc(t.id || "")}"
+  style="
+    margin-top:8px;
+    padding:10px;
+    background:#0b0f17;
+    border:1px solid #202838;
+    border-radius:10px;
+    color:#60a5fa;
+    font-size:13px;
+    font-weight:700;
+    text-align:center;
+  "
+>
+  ⏳ Countdown loading...
+</div>
 
       ${primaryBtn(
         "View & Join",
@@ -666,7 +682,79 @@ function matchCard(t) {
     </div>
   `;
 }
+function startTournamentCountdown(tournament) {
+  const box = document.getElementById(
+    `countdown-${tournament.id}`
+  );
 
+  if (!box || !tournament.start_time) return;
+
+  const updateCountdown = () => {
+    const status =
+      String(tournament.status || "upcoming").toLowerCase();
+
+    if (status === "completed") {
+      box.textContent = "✅ COMPLETED";
+      return;
+    }
+
+    if (status === "live") {
+      box.textContent = "🔴 LIVE NOW";
+      return;
+    }
+
+    const startTime =
+      new Date(tournament.start_time).getTime();
+
+    const now = Date.now();
+    const difference = startTime - now;
+
+    if (difference <= 0) {
+      box.textContent = "🔴 LIVE NOW";
+      return;
+    }
+
+    const totalSeconds =
+      Math.floor(difference / 1000);
+
+    const days =
+      Math.floor(totalSeconds / 86400);
+
+    const hours =
+      Math.floor(
+        (totalSeconds % 86400) / 3600
+      );
+
+    const minutes =
+      Math.floor(
+        (totalSeconds % 3600) / 60
+      );
+
+    const seconds =
+      totalSeconds % 60;
+
+    let text = "";
+
+    if (days > 0) {
+      text += `${days}d `;
+    }
+
+    text +=
+      `${String(hours).padStart(2, "0")}h ` +
+      `${String(minutes).padStart(2, "0")}m ` +
+      `${String(seconds).padStart(2, "0")}s`;
+
+    box.textContent =
+      `⏳ Starts in ${text}`;
+  };
+
+  updateCountdown();
+
+  const timer =
+    setInterval(updateCountdown, 1000);
+
+  box.dataset.timer = timer;
+}
 async function openMatch(id) {
   const { data, error } = await db
     .from("tournaments")
