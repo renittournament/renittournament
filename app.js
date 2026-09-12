@@ -793,13 +793,31 @@ async function joinTournament(id) {
 }
 
 async function showResults() {
-  const { data, error } = await db
-    .from("results")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const { data, error } = await db.rpc(
+    "get_public_tournament_results"
+  );
 
   if (error) {
     console.log(error);
+
+    app.innerHTML = pageShell(`
+      <main style="padding:18px 16px 90px;">
+        <h2>Results</h2>
+
+        <div style="
+          background:#101521;
+          border:1px solid #202838;
+          border-radius:14px;
+          padding:25px;
+          text-align:center;
+          color:#ff7185;
+        ">
+          Results load করা যায়নি।
+        </div>
+      </main>
+    `);
+
+    return;
   }
 
   app.innerHTML = pageShell(`
@@ -808,35 +826,61 @@ async function showResults() {
 
       ${
         data?.length
-        ? data.map(r => `
-          <div style="
-            background:#101521;
-            border:1px solid #202838;
-            border-radius:14px;
-            padding:15px;
-            margin-bottom:10px;
-          ">
-            <b>${esc(r.username || r.player_name || "Player")}</b>
-            <div style="color:#9ba6b8;margin-top:6px;">
-              Rank: ${esc(r.rank ?? "-")}
-            </div>
-            <div style="color:#9ba6b8;">
-              Prize: ৳${esc(r.prize ?? r.amount ?? 0)}
-            </div>
-          </div>
-        `).join("")
-        : `
-          <div style="
-            background:#101521;
-            border:1px solid #202838;
-            border-radius:14px;
-            padding:25px;
-            text-align:center;
-            color:#8f9bb0;
-          ">
-            এখনো কোনো result নেই।
-          </div>
-        `
+          ? data.map(r => `
+              <div style="
+                background:#101521;
+                border:1px solid #202838;
+                border-radius:14px;
+                padding:15px;
+                margin-bottom:10px;
+              ">
+                <div style="
+                  font-size:18px;
+                  font-weight:700;
+                ">
+                  ${esc(r.username || "Player")}
+                </div>
+
+                <div style="
+                  color:#9ba6b8;
+                  margin-top:7px;
+                ">
+                  ${esc(r.tournament_title || "Tournament")}
+                </div>
+
+                <div style="
+                  color:#9ba6b8;
+                  margin-top:5px;
+                ">
+                  Game: ${esc(r.game || "-")}
+                </div>
+
+                <div style="
+                  margin-top:8px;
+                ">
+                  Rank: ${esc(r.result_position ?? "-")}
+                </div>
+
+                <div style="
+                  color:#9ba6b8;
+                  margin-top:5px;
+                ">
+                  Prize: ৳${esc(r.prize_amount ?? 0)}
+                </div>
+              </div>
+            `).join("")
+          : `
+              <div style="
+                background:#101521;
+                border:1px solid #202838;
+                border-radius:14px;
+                padding:25px;
+                text-align:center;
+                color:#8f9bb0;
+              ">
+                এখনো কোনো result নেই।
+              </div>
+            `
       }
     </main>
   `);
