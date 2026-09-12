@@ -1717,6 +1717,71 @@ async function loadResultPlayers() {
       </option>
     `).join("");
 }
+async function saveTournamentResult() {
+  if (!(await isAdmin())) {
+    alert("Admin access denied.");
+    return;
+  }
+
+  const tournamentId =
+    document.getElementById("resultTournamentId").value;
+
+  const playerId =
+    document.getElementById("resultPlayerId").value;
+
+  const position =
+    document.getElementById("resultPosition").value;
+
+  const prizeAmount =
+    Number(document.getElementById("resultPrizeAmount").value);
+
+  const msg =
+    document.getElementById("resultSaveMessage");
+
+  if (!tournamentId) {
+    msg.textContent = "Tournament select করুন।";
+    return;
+  }
+
+  if (!playerId) {
+    msg.textContent = "Player select করুন।";
+    return;
+  }
+
+  if (!position) {
+    msg.textContent = "Position select করুন।";
+    return;
+  }
+
+  if (prizeAmount < 0) {
+    msg.textContent = "Prize amount ভুল।";
+    return;
+  }
+
+  msg.textContent = "Result save হচ্ছে...";
+
+  const { data, error } = await db.rpc(
+    "save_tournament_result",
+    {
+      p_tournament_id: Number(tournamentId),
+      p_user_id: playerId,
+      p_position: Number(position),
+      p_prize_amount: prizeAmount
+    }
+  );
+
+  if (error) {
+    console.log(error);
+    msg.textContent =
+      "Save করা যায়নি: " + error.message;
+    return;
+  }
+
+  msg.textContent =
+    "Tournament result successfully saved!";
+
+  document.getElementById("resultPrizeAmount").value = "";
+}
 async function publishTournamentRoom() {
   if (!(await isAdmin())) {
     alert("Admin access denied.");
