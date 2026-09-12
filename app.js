@@ -1696,10 +1696,12 @@ async function loadResultPlayers() {
     registrations.map(r => r.user_id);
 
   const { data: players, error: playerError } =
-    await db
-      .from("Profiles")
-      .select("id, username, email")
-      .in("id", userIds);
+  await db.rpc(
+    "get_admin_tournament_players",
+    {
+      p_tournament_id: Number(tournamentId)
+    }
+  );
 
   if (playerError) {
     playerSelect.innerHTML =
@@ -1710,7 +1712,7 @@ async function loadResultPlayers() {
   playerSelect.innerHTML =
     `<option value="">Select player</option>` +
     (players || []).map(p => `
-      <option value="${esc(p.id)}">
+      <option value="${esc(p.user_id)}">
         ${esc(p.username || p.email || "Player")}
       </option>
     `).join("");
