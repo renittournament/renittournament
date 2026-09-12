@@ -612,10 +612,9 @@ async function showGameMatches(game) {
       }
     </main>
   `);
-}
   matches.forEach(tournament => {
-    startTournamentCountdown(tournament);
-  });
+  startTournamentCountdown(tournament);
+});
 }
 function matchCard(t) {
   const title = tournamentTitle(t);
