@@ -1618,6 +1618,66 @@ async function openAdmin() {
   border-radius:14px;
   padding:16px;
 ">
+  <div style="
+  margin-bottom:15px;
+  background:#101521;
+  border:1px solid #202838;
+  border-radius:14px;
+  padding:16px;
+">
+  <h3 style="margin-top:0;">Tournament Status</h3>
+
+  <select
+    id="statusTournamentId"
+    style="
+      width:100%;
+      box-sizing:border-box;
+      background:#111722;
+      color:white;
+      border:1px solid #293346;
+      border-radius:10px;
+      padding:13px;
+      margin-top:10px;
+      outline:none;
+    "
+  >
+    <option value="">Loading tournaments...</option>
+  </select>
+
+  <select
+    id="tournamentStatus"
+    style="
+      width:100%;
+      box-sizing:border-box;
+      background:#111722;
+      color:white;
+      border:1px solid #293346;
+      border-radius:10px;
+      padding:13px;
+      margin-top:10px;
+      outline:none;
+    "
+  >
+    <option value="">Select status</option>
+    <option value="upcoming">Upcoming</option>
+    <option value="live">Live</option>
+    <option value="completed">Completed</option>
+  </select>
+
+  ${primaryBtn(
+    "Update Status",
+    "updateTournamentStatus()"
+  )}
+
+  <div
+    id="statusUpdateMessage"
+    style="
+      margin-top:10px;
+      color:#9ba6b8;
+      font-size:13px;
+    "
+  ></div>
+</div>
   <h3 style="margin-top:0;">Tournament Results</h3>
 
   <select
