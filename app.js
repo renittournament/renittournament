@@ -1591,6 +1591,7 @@ async function openAdmin() {
   `);
     await loadAdminDepositRequests();
   await loadRoomTournaments();
+  await loadResultTournaments();
 }
 async function loadRoomTournaments() {
   const select = document.getElementById("roomTournamentId");
@@ -1621,7 +1622,37 @@ async function loadRoomTournaments() {
       </option>
     `).join("");
 }
+async function loadResultTournaments() {
+  const select =
+    document.getElementById("resultTournamentId");
 
+  if (!select) return;
+
+  const { data, error } = await db
+    .from("tournaments")
+    .select("id, title, game")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    select.innerHTML =
+      `<option value="">Tournament load করা যায়নি</option>`;
+    return;
+  }
+
+  if (!data?.length) {
+    select.innerHTML =
+      `<option value="">কোনো tournament নেই</option>`;
+    return;
+  }
+
+  select.innerHTML =
+    `<option value="">Tournament select করুন</option>` +
+    data.map(t => `
+      <option value="${esc(t.id)}">
+        ${esc(t.title || "Tournament #" + t.id)}
+      </option>
+    `).join("");
+}
 
 async function publishTournamentRoom() {
   if (!(await isAdmin())) {
