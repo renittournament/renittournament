@@ -1652,8 +1652,69 @@ async function loadResultTournaments() {
         ${esc(t.title || "Tournament #" + t.id)}
       </option>
     `).join("");
+  select.onchange = loadResultPlayers;
 }
+async function loadResultPlayers() {
+  const tournamentSelect =
+    document.getElementById("resultTournamentId");
 
+  const playerSelect =
+    document.getElementById("resultPlayerId");
+
+  if (!tournamentSelect || !playerSelect) return;
+
+  const tournamentId = tournamentSelect.value;
+
+  if (!tournamentId) {
+    playerSelect.innerHTML =
+      `<option value="">Select player</option>`;
+    return;
+  }
+
+  playerSelect.innerHTML =
+    `<option value="">Loading players...</option>`;
+
+  const { data: registrations, error: regError } =
+    await db
+      .from("registrations")
+      .select("user_id")
+      .eq("tournament_id", Number(tournamentId));
+
+  if (regError) {
+    playerSelect.innerHTML =
+      `<option value="">Player load করা যায়নি</option>`;
+    return;
+  }
+
+  if (!registrations?.length) {
+    playerSelect.innerHTML =
+      `<option value="">কোনো player join করেনি</option>`;
+    return;
+  }
+
+  const userIds =
+    registrations.map(r => r.user_id);
+
+  const { data: players, error: playerError } =
+    await db
+      .from("Profiles")
+      .select("id, username, email")
+      .in("id", userIds);
+
+  if (playerError) {
+    playerSelect.innerHTML =
+      `<option value="">Player load করা যায়নি</option>`;
+    return;
+  }
+
+  playerSelect.innerHTML =
+    `<option value="">Select player</option>` +
+    (players || []).map(p => `
+      <option value="${esc(p.id)}">
+        ${esc(p.username || p.email || "Player")}
+      </option>
+    `).join("");
+}
 async function publishTournamentRoom() {
   if (!(await isAdmin())) {
     alert("Admin access denied.");
