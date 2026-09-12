@@ -1144,6 +1144,12 @@ async function openWallet() {
 
 async function showProfile() {
   currentProfile = await loadProfile();
+    const { data: myTournaments, error: myTournamentsError } =
+    await db.rpc("get_my_tournaments");
+
+  if (myTournamentsError) {
+    console.log(myTournamentsError);
+  }
 
   app.innerHTML = pageShell(`
     <main style="padding:18px 16px 90px;">
@@ -1181,6 +1187,71 @@ async function showProfile() {
           font-size:13px;
         ">
           Balance: ৳${esc(currentProfile?.balance ?? 0)}
+        </div>
+                <div style="
+          margin-top:15px;
+          background:#101521;
+          border:1px solid #202838;
+          border-radius:16px;
+          padding:20px;
+        ">
+          <h3 style="margin-top:0;">My Tournaments</h3>
+
+          ${
+            myTournaments?.length
+              ? myTournaments.map(t => `
+                <div style="
+                  background:#0b0f17;
+                  border:1px solid #202838;
+                  border-radius:12px;
+                  padding:14px;
+                  margin-top:10px;
+                ">
+                  <div style="
+                    font-size:17px;
+                    font-weight:700;
+                  ">
+                    ${esc(t.tournament_title || "Tournament")}
+                  </div>
+
+                  <div style="
+                    color:#9ba6b8;
+                    margin-top:6px;
+                  ">
+                    Game: ${esc(t.game || "-")}
+                  </div>
+
+                  <div style="
+                    color:#9ba6b8;
+                    margin-top:4px;
+                  ">
+                    Entry Fee: ৳${esc(t.entry_fee ?? 0)}
+                  </div>
+
+                  <div style="
+                    color:#9ba6b8;
+                    margin-top:4px;
+                  ">
+                    Prize Pool: ৳${esc(t.prize_pool ?? 0)}
+                  </div>
+
+                  <div style="
+                    color:#9ba6b8;
+                    margin-top:4px;
+                  ">
+                    Status: ${esc(t.status || "-")}
+                  </div>
+                </div>
+              `).join("")
+              : `
+                <div style="
+                  color:#8f9bb0;
+                  margin-top:10px;
+                ">
+                  আপনি এখনো কোনো tournament-এ join করেননি।
+                </div>
+              `
+          }
         </div>
         ${await isAdmin() ? primaryBtn(
   "Admin Panel",
