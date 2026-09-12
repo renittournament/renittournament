@@ -1818,7 +1818,7 @@ async function updateTournamentStatus() {
   }
 
   const tournamentId =
-    document.getElementById("tournamentStatus").value;
+    document.getElementById("statusTournamentId").value;
 
   const status =
     document.getElementById("statusValue").value;
