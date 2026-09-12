@@ -1142,7 +1142,7 @@ async function openWallet() {
   await loadTransactionHistory();
 }
 
-aasync function showProfile() {
+async function showProfile() {
   currentProfile = await loadProfile();
 
   const { data: myTournaments, error: myTournamentsError } =
