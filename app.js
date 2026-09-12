@@ -856,10 +856,20 @@ async function showResults() {
                 </div>
 
                 <div style="
-                  margin-top:8px;
-                ">
-                  Rank: ${esc(r.result_position ?? "-")}
-                </div>
+  margin-top:12px;
+  font-size:18px;
+  font-weight:700;
+">
+  ${
+    r.result_position === 1
+      ? "🥇 1st Place"
+      : r.result_position === 2
+      ? "🥈 2nd Place"
+      : r.result_position === 3
+      ? "🥉 3rd Place"
+      : `${esc(r.result_position ?? "-")} Place`
+  }
+</div>
 
                 <div style="
                   color:#9ba6b8;
