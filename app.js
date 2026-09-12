@@ -1142,135 +1142,372 @@ async function openWallet() {
   await loadTransactionHistory();
 }
 
-async function showProfile() {
+aasync function showProfile() {
   currentProfile = await loadProfile();
-    const { data: myTournaments, error: myTournamentsError } =
+
+  const { data: myTournaments, error: myTournamentsError } =
     await db.rpc("get_my_tournaments");
 
   if (myTournamentsError) {
     console.log(myTournamentsError);
   }
 
+  const tournaments = myTournaments || [];
+
+  const totalJoined = tournaments.length;
+
+  const liveCount = tournaments.filter(
+    t => String(t.status || "").toLowerCase() === "live"
+  ).length;
+
+  const completedCount = tournaments.filter(
+    t => String(t.status || "").toLowerCase() === "completed"
+  ).length;
+
+  const upcomingCount = tournaments.filter(
+    t => String(t.status || "").toLowerCase() === "upcoming"
+  ).length;
+
+  const username =
+    currentProfile?.username ||
+    currentUser?.user_metadata?.username ||
+    "Player";
+
+  const email = currentUser?.email || "";
+
+  const balance = Number(
+    currentProfile?.balance ?? 0
+  );
+
+  const firstLetter =
+    String(username).charAt(0).toUpperCase();
+
   app.innerHTML = pageShell(`
     <main style="padding:18px 16px 90px;">
-      <h2>Profile</h2>
 
+      <h2 style="margin-bottom:15px;">
+        Profile
+      </h2>
+
+      <!-- PROFILE HEADER -->
       <div style="
+        background:linear-gradient(
+          135deg,
+          #151d2d,
+          #0d121c
+        );
+        border:1px solid #293346;
+        border-radius:18px;
+        padding:20px;
+      ">
+
+        <div style="
+          width:64px;
+          height:64px;
+          border-radius:50%;
+          background:#e94560;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          font-size:28px;
+          font-weight:900;
+          margin-bottom:14px;
+        ">
+          ${esc(firstLetter)}
+        </div>
+
+        <div style="
+          color:#8f9bb0;
+          font-size:11px;
+          letter-spacing:1px;
+        ">
+          PLAYER
+        </div>
+
+        <div style="
+          font-size:23px;
+          font-weight:800;
+          margin-top:5px;
+        ">
+          ${esc(username)}
+        </div>
+
+        <div style="
+          color:#9ba6b8;
+          font-size:13px;
+          margin-top:7px;
+          word-break:break-all;
+        ">
+          ${esc(email)}
+        </div>
+
+      </div>
+
+
+      <!-- BALANCE -->
+      <div style="
+        margin-top:14px;
         background:#101521;
         border:1px solid #202838;
         border-radius:16px;
-        padding:20px;
+        padding:18px;
       ">
-        <div style="color:#8f9bb0;font-size:12px;">
-          USERNAME
-        </div>
-
-        <div style="
-          font-size:21px;
-          font-weight:700;
-          margin-top:5px;
-        ">
-          ${esc(currentProfile?.username || "Player")}
-        </div>
 
         <div style="
           color:#8f9bb0;
-          margin-top:15px;
-          font-size:13px;
+          font-size:12px;
         ">
-          ${esc(currentUser?.email || "")}
+          WALLET BALANCE
         </div>
 
         <div style="
-          color:#8f9bb0;
-          margin-top:10px;
-          font-size:13px;
+          font-size:30px;
+          font-weight:800;
+          margin-top:6px;
         ">
-          Balance: ৳${esc(currentProfile?.balance ?? 0)}
+          ৳${esc(balance)}
         </div>
-                <div style="
-          margin-top:15px;
+
+        ${primaryBtn(
+          "Open Wallet",
+          "openWallet()"
+        )}
+
+      </div>
+
+
+      <!-- PLAYER STATS -->
+      <div style="
+        margin-top:14px;
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:10px;
+      ">
+
+        <div style="
           background:#101521;
           border:1px solid #202838;
-          border-radius:16px;
-          padding:20px;
+          border-radius:14px;
+          padding:15px;
         ">
-          <h3 style="margin-top:0;">My Tournaments</h3>
+          <div style="
+            color:#8f9bb0;
+            font-size:12px;
+          ">
+            JOINED
+          </div>
 
-          ${
-            myTournaments?.length
-              ? myTournaments.map(t => `
-                <div style="
-                  background:#0b0f17;
-                  border:1px solid #202838;
-                  border-radius:12px;
-                  padding:14px;
-                  margin-top:10px;
-                ">
-                  <div style="
-                    font-size:17px;
-                    font-weight:700;
-                  ">
-                    ${esc(t.tournament_title || "Tournament")}
-                  </div>
-
-                  <div style="
-                    color:#9ba6b8;
-                    margin-top:6px;
-                  ">
-                    Game: ${esc(t.game || "-")}
-                  </div>
-
-                  <div style="
-                    color:#9ba6b8;
-                    margin-top:4px;
-                  ">
-                    Entry Fee: ৳${esc(t.entry_fee ?? 0)}
-                  </div>
-
-                  <div style="
-                    color:#9ba6b8;
-                    margin-top:4px;
-                  ">
-                    Prize Pool: ৳${esc(t.prize_pool ?? 0)}
-                  </div>
-
-                  <div style="
-                    color:#9ba6b8;
-                    margin-top:4px;
-                  ">
-                    Status: ${esc(t.status || "-")}
-                  </div>
-                </div>
-              `).join("")
-              : `
-                <div style="
-                  color:#8f9bb0;
-                  margin-top:10px;
-                ">
-                  আপনি এখনো কোনো tournament-এ join করেননি।
-                </div>
-              `
-          }
+          <div style="
+            font-size:24px;
+            font-weight:800;
+            margin-top:5px;
+          ">
+            ${esc(totalJoined)}
+          </div>
         </div>
-        ${await isAdmin() ? primaryBtn(
-  "Admin Panel",
-  "openAdmin()"
-) : ""}
 
-        <button onclick="logout()" style="
-          width:100%;
-          margin-top:20px;
-          padding:13px;
-          background:#171e2b;
-          color:#ff6178;
-          border:1px solid #303a4d;
-          border-radius:10px;
-          font-weight:700;
+
+        <div style="
+          background:#101521;
+          border:1px solid #202838;
+          border-radius:14px;
+          padding:15px;
         ">
-          Logout
-        </button>
+          <div style="
+            color:#8f9bb0;
+            font-size:12px;
+          ">
+            LIVE
+          </div>
+
+          <div style="
+            font-size:24px;
+            font-weight:800;
+            margin-top:5px;
+            color:#4ade80;
+          ">
+            ${esc(liveCount)}
+          </div>
+        </div>
+
+
+        <div style="
+          background:#101521;
+          border:1px solid #202838;
+          border-radius:14px;
+          padding:15px;
+        ">
+          <div style="
+            color:#8f9bb0;
+            font-size:12px;
+          ">
+            UPCOMING
+          </div>
+
+          <div style="
+            font-size:24px;
+            font-weight:800;
+            margin-top:5px;
+          ">
+            ${esc(upcomingCount)}
+          </div>
+        </div>
+
+
+        <div style="
+          background:#101521;
+          border:1px solid #202838;
+          border-radius:14px;
+          padding:15px;
+        ">
+          <div style="
+            color:#8f9bb0;
+            font-size:12px;
+          ">
+            COMPLETED
+          </div>
+
+          <div style="
+            font-size:24px;
+            font-weight:800;
+            margin-top:5px;
+            color:#60a5fa;
+          ">
+            ${esc(completedCount)}
+          </div>
+        </div>
+
       </div>
+
+
+      <!-- MY TOURNAMENTS -->
+      <div style="
+        margin-top:15px;
+        background:#101521;
+        border:1px solid #202838;
+        border-radius:16px;
+        padding:18px;
+      ">
+
+        <h3 style="
+          margin-top:0;
+          margin-bottom:10px;
+        ">
+          My Tournaments
+        </h3>
+
+        ${
+          tournaments.length
+            ? tournaments.map(t => {
+
+                const status =
+                  String(t.status || "upcoming")
+                    .toLowerCase();
+
+                let statusColor = "#f0b44d";
+
+                if (status === "live") {
+                  statusColor = "#4ade80";
+                }
+
+                if (status === "completed") {
+                  statusColor = "#60a5fa";
+                }
+
+                return `
+                  <div style="
+                    background:#0b0f17;
+                    border:1px solid #202838;
+                    border-radius:13px;
+                    padding:15px;
+                    margin-top:10px;
+                  ">
+
+                    <div style="
+                      font-size:17px;
+                      font-weight:700;
+                    ">
+                      ${esc(
+                        t.tournament_title ||
+                        "Tournament"
+                      )}
+                    </div>
+
+                    <div style="
+                      color:#9ba6b8;
+                      font-size:13px;
+                      margin-top:6px;
+                    ">
+                      ${esc(t.game || "-")}
+                    </div>
+
+                    <div style="
+                      display:flex;
+                      justify-content:space-between;
+                      align-items:center;
+                      margin-top:12px;
+                    ">
+
+                      <span style="
+                        color:#9ba6b8;
+                        font-size:12px;
+                      ">
+                        Entry: ৳${esc(t.entry_fee ?? 0)}
+                      </span>
+
+                      <span style="
+                        color:${statusColor};
+                        font-size:12px;
+                        font-weight:700;
+                        text-transform:uppercase;
+                      ">
+                        ${esc(status)}
+                      </span>
+
+                    </div>
+
+                  </div>
+                `;
+              }).join("")
+            : `
+              <div style="
+                color:#8f9bb0;
+                padding:12px 0;
+                text-align:center;
+              ">
+                আপনি এখনো কোনো tournament-এ join করেননি।
+              </div>
+            `
+        }
+
+      </div>
+
+
+      <!-- ADMIN -->
+      ${
+        await isAdmin()
+          ? primaryBtn(
+              "Admin Panel",
+              "openAdmin()"
+            )
+          : ""
+      }
+
+
+      <!-- LOGOUT -->
+      <button onclick="logout()" style="
+        width:100%;
+        margin-top:12px;
+        padding:13px;
+        background:#171e2b;
+        color:#ff6178;
+        border:1px solid #303a4d;
+        border-radius:10px;
+        font-weight:700;
+      ">
+        Logout
+      </button>
+
     </main>
   `);
 }
