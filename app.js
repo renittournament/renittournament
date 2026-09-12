@@ -100,6 +100,7 @@ function pageShell(content) {
         <button onclick="showMatches()" style="${navBtn()}">Matches</button>
         <button onclick="openWallet()" style="${navBtn()}">Wallet</button>
         <button onclick="showResults()" style="${navBtn()}">Results</button>
+        <button onclick="showLeaderboard()" style="${navBtn()}">Ranking</button>
       </nav>
     </div>
   `;
@@ -895,7 +896,210 @@ async function showResults() {
     </main>
   `);
 }
+async function showLeaderboard() {
+  const { data, error } =
+    await db.rpc("get_leaderboard");
 
+  if (error) {
+    console.log(error);
+
+    app.innerHTML = pageShell(`
+      <main style="padding:18px 16px 90px;">
+        <h2>Leaderboard</h2>
+
+        <div style="
+          background:#101521;
+          border:1px solid #202838;
+          border-radius:14px;
+          padding:25px;
+          text-align:center;
+          color:#ff7185;
+        ">
+          Leaderboard load করা যায়নি।
+        </div>
+      </main>
+    `);
+
+    return;
+  }
+
+  const players = data || [];
+
+  app.innerHTML = pageShell(`
+    <main style="padding:18px 16px 90px;">
+
+      <h2>🏆 Leaderboard</h2>
+
+      <div style="
+        color:#8f9bb0;
+        font-size:13px;
+        margin-top:-5px;
+        margin-bottom:15px;
+      ">
+        Top tournament players
+      </div>
+
+      ${
+        players.length
+          ? players.map(player => `
+
+              <div style="
+                background:#101521;
+                border:1px solid #202838;
+                border-radius:14px;
+                padding:16px;
+                margin-bottom:10px;
+              ">
+
+                <div style="
+                  display:flex;
+                  align-items:center;
+                  gap:12px;
+                ">
+
+                  <div style="
+                    width:42px;
+                    height:42px;
+                    border-radius:50%;
+                    background:#e94560;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    font-weight:900;
+                    font-size:16px;
+                  ">
+                    ${
+                      Number(player.rank) === 1
+                        ? "🥇"
+                        : Number(player.rank) === 2
+                        ? "🥈"
+                        : Number(player.rank) === 3
+                        ? "🥉"
+                        : `#${esc(player.rank)}`
+                    }
+                  </div>
+
+                  <div style="flex:1;">
+
+                    <div style="
+                      font-size:17px;
+                      font-weight:700;
+                    ">
+                      ${esc(player.username || "Player")}
+                    </div>
+
+                    <div style="
+                      color:#8f9bb0;
+                      font-size:12px;
+                      margin-top:4px;
+                    ">
+                      Rank #${esc(player.rank)}
+                    </div>
+
+                  </div>
+
+                </div>
+
+
+                <div style="
+                  display:grid;
+                  grid-template-columns:1fr 1fr 1fr;
+                  gap:8px;
+                  margin-top:15px;
+                ">
+
+                  <div style="
+                    background:#0b0f17;
+                    border-radius:10px;
+                    padding:10px;
+                    text-align:center;
+                  ">
+                    <div style="
+                      color:#8f9bb0;
+                      font-size:10px;
+                    ">
+                      MATCHES
+                    </div>
+
+                    <div style="
+                      font-size:18px;
+                      font-weight:800;
+                      margin-top:4px;
+                    ">
+                      ${esc(player.matches_played ?? 0)}
+                    </div>
+                  </div>
+
+
+                  <div style="
+                    background:#0b0f17;
+                    border-radius:10px;
+                    padding:10px;
+                    text-align:center;
+                  ">
+                    <div style="
+                      color:#8f9bb0;
+                      font-size:10px;
+                    ">
+                      WINS
+                    </div>
+
+                    <div style="
+                      font-size:18px;
+                      font-weight:800;
+                      color:#4ade80;
+                      margin-top:4px;
+                    ">
+                      ${esc(player.wins ?? 0)}
+                    </div>
+                  </div>
+
+
+                  <div style="
+                    background:#0b0f17;
+                    border-radius:10px;
+                    padding:10px;
+                    text-align:center;
+                  ">
+                    <div style="
+                      color:#8f9bb0;
+                      font-size:10px;
+                    ">
+                      PRIZE
+                    </div>
+
+                    <div style="
+                      font-size:18px;
+                      font-weight:800;
+                      color:#60a5fa;
+                      margin-top:4px;
+                    ">
+                      ৳${esc(player.total_prize ?? 0)}
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+
+            `).join("")
+          : `
+            <div style="
+              background:#101521;
+              border:1px solid #202838;
+              border-radius:14px;
+              padding:25px;
+              text-align:center;
+              color:#8f9bb0;
+            ">
+              এখনো কোনো ranked player নেই।
+            </div>
+          `
+      }
+
+    </main>
+  `);
+}
 async function submitDepositRequest() {
   if (!currentUser) {
     loginPage();
@@ -1525,6 +1729,7 @@ window.showGameMatches = showGameMatches;
 window.openMatch = openMatch;
 window.joinTournament = joinTournament;
 window.showResults = showResults;
+window.showLeaderboard = showLeaderboard;
 window.updateTournamentStatus = updateTournamentStatus;
 async function loadTransactionHistory() {
   const box = document.getElementById("transactionHistory");
