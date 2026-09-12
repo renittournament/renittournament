@@ -1288,6 +1288,7 @@ window.showGameMatches = showGameMatches;
 window.openMatch = openMatch;
 window.joinTournament = joinTournament;
 window.showResults = showResults;
+window.updateTournamentStatus = updateTournamentStatus;
 async function loadTransactionHistory() {
   const box = document.getElementById("transactionHistory");
   if (!box || !currentUser) return;
