@@ -1778,6 +1778,37 @@ async function openAdmin() {
   await loadRoomTournaments();
   await loadResultTournaments();
 }
+async function loadStatusTournaments() {
+  const select =
+    document.getElementById("statusTournamentId");
+
+  if (!select) return;
+
+  const { data, error } = await db
+    .from("tournaments")
+    .select("id, title")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    select.innerHTML =
+      `<option value="">Tournament load করা যায়নি</option>`;
+    return;
+  }
+
+  if (!data?.length) {
+    select.innerHTML =
+      `<option value="">কোনো tournament নেই</option>`;
+    return;
+  }
+
+  select.innerHTML =
+    `<option value="">Tournament select করুন</option>` +
+    data.map(t => `
+      <option value="${esc(t.id)}">
+        ${esc(t.title || "Tournament #" + t.id)}
+      </option>
+    `).join("");
+}
 async function loadRoomTournaments() {
   const select = document.getElementById("roomTournamentId");
   if (!select) return;
