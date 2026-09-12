@@ -1809,6 +1809,51 @@ async function loadStatusTournaments() {
       </option>
     `).join("");
 }
+async function updateTournamentStatus() {
+  if (!(await isAdmin())) {
+    alert("Admin access denied.");
+    return;
+  }
+
+  const tournamentId =
+    document.getElementById("statusTournamentId").value;
+
+  const status =
+    document.getElementById("statusValue").value;
+
+  const msg =
+    document.getElementById("statusUpdateMessage");
+
+  if (!tournamentId) {
+    msg.textContent = "Tournament select করুন।";
+    return;
+  }
+
+  if (!status) {
+    msg.textContent = "Status select করুন।";
+    return;
+  }
+
+  msg.textContent = "Status update হচ্ছে...";
+
+  const { data, error } = await db.rpc(
+    "update_tournament_status",
+    {
+      p_tournament_id: Number(tournamentId),
+      p_status: status
+    }
+  );
+
+  if (error) {
+    console.log(error);
+    msg.textContent =
+      "Status update করা যায়নি: " + error.message;
+    return;
+  }
+
+  msg.textContent =
+    "Tournament status successfully updated!";
+}
 async function loadRoomTournaments() {
   const select = document.getElementById("roomTournamentId");
   if (!select) return;
