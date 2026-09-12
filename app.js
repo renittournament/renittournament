@@ -1494,6 +1494,9 @@ async function openAdmin() {
       </div>
     </main>
   `);
+    await loadAdminDepositRequests();
+  await loadRoomTournaments();
+}
 async function loadRoomTournaments() {
   const select = document.getElementById("roomTournamentId");
   if (!select) return;
