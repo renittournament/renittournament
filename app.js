@@ -1486,6 +1486,101 @@ async function openAdmin() {
     font-size:13px;
   "></div>
 </div> 
+        <div style="
+  margin-bottom:15px;
+  background:#101521;
+  border:1px solid #202838;
+  border-radius:14px;
+  padding:16px;
+">
+  <h3 style="margin-top:0;">Tournament Results</h3>
+
+  <select
+    id="resultTournamentId"
+    style="
+      width:100%;
+      box-sizing:border-box;
+      background:#111722;
+      color:white;
+      border:1px solid #293346;
+      border-radius:10px;
+      padding:13px;
+      margin-top:10px;
+      outline:none;
+    "
+  >
+    <option value="">Loading tournaments...</option>
+  </select>
+
+  <select
+    id="resultPlayerId"
+    style="
+      width:100%;
+      box-sizing:border-box;
+      background:#111722;
+      color:white;
+      border:1px solid #293346;
+      border-radius:10px;
+      padding:13px;
+      margin-top:10px;
+      outline:none;
+    "
+  >
+    <option value="">Select player</option>
+  </select>
+
+  <select
+    id="resultPosition"
+    style="
+      width:100%;
+      box-sizing:border-box;
+      background:#111722;
+      color:white;
+      border:1px solid #293346;
+      border-radius:10px;
+      padding:13px;
+      margin-top:10px;
+      outline:none;
+    "
+  >
+    <option value="">Select position</option>
+    <option value="1">1st Place</option>
+    <option value="2">2nd Place</option>
+    <option value="3">3rd Place</option>
+  </select>
+
+  <input
+    id="resultPrizeAmount"
+    type="number"
+    min="0"
+    placeholder="Prize Amount"
+    style="
+      width:100%;
+      box-sizing:border-box;
+      background:#111722;
+      color:white;
+      border:1px solid #293346;
+      border-radius:10px;
+      padding:13px;
+      margin-top:10px;
+      outline:none;
+    "
+  >
+
+  ${primaryBtn(
+    "Save Result",
+    "saveTournamentResult()"
+  )}
+
+  <div
+    id="resultSaveMessage"
+    style="
+      margin-top:10px;
+      color:#9ba6b8;
+      font-size:13px;
+    "
+  ></div>
+</div>
         <h3 style="margin-top:0;">Deposit Requests</h3>
 
         <div id="adminDepositRequests">
