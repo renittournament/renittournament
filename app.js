@@ -74,6 +74,7 @@ function pageShell(content) {
           <div style="font-size:11px;color:#8892a5;">TOURNAMENT</div>
         </div>
         <button onclick="showNotifications()" style="
+  position:relative;
   background:#171e2b;
   color:white;
   border:1px solid #293346;
@@ -82,6 +83,26 @@ function pageShell(content) {
   font-size:20px;
 ">
   🔔
+  <span
+    id="notificationBadge"
+    style="
+      display:none;
+      position:absolute;
+      top:-6px;
+      right:-6px;
+      background:red;
+      color:white;
+      border-radius:999px;
+      min-width:18px;
+      height:18px;
+      padding:0 4px;
+      font-size:11px;
+      font-weight:bold;
+      line-height:18px;
+      text-align:center;
+      border:2px solid #0b0f17;
+    "
+  >0</span>
 </button>
 
         <button onclick="showProfile()" style="
@@ -114,6 +135,30 @@ function pageShell(content) {
       </nav>
     </div>
   `;
+}
+async function updateNotificationBadge() {
+  const badge = document.getElementById("notificationBadge");
+
+  if (!badge || !currentUser) return;
+
+  const { count, error } = await db
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", currentUser.id)
+    .eq("is_read", false);
+
+  if (error) {
+    console.error(error);
+    badge.style.display = "none";
+    return;
+  }
+
+  if (count > 0) {
+    badge.textContent = count > 99 ? "99+" : count;
+    badge.style.display = "inline-flex";
+  } else {
+    badge.style.display = "none";
+  }
 }
 async function showNotifications() {
   if (!currentUser) {
