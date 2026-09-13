@@ -54,6 +54,8 @@ function esc(value) {
 }
 
 function pageShell(content) {
+  setTimeout(updateNotificationBadge, 0);
+
   return `
     <div style="
       min-height:100vh;
@@ -73,37 +75,38 @@ function pageShell(content) {
           <div style="font-size:21px;font-weight:800;">RENIT</div>
           <div style="font-size:11px;color:#8892a5;">TOURNAMENT</div>
         </div>
+
         <button onclick="showNotifications()" style="
-  position:relative;
-  background:#171e2b;
-  color:white;
-  border:1px solid #293346;
-  border-radius:10px;
-  padding:12px 14px;
-  font-size:20px;
-">
-  🔔
-  <span
-    id="notificationBadge"
-    style="
-      display:none;
-      position:absolute;
-      top:-6px;
-      right:-6px;
-      background:red;
-      color:white;
-      border-radius:999px;
-      min-width:18px;
-      height:18px;
-      padding:0 4px;
-      font-size:11px;
-      font-weight:bold;
-      line-height:18px;
-      text-align:center;
-      border:2px solid #0b0f17;
-    "
-  >0</span>
-</button>
+          position:relative;
+          background:#171e2b;
+          color:white;
+          border:1px solid #293346;
+          border-radius:10px;
+          padding:12px 14px;
+          font-size:20px;
+        ">
+          🔔
+          <span
+            id="notificationBadge"
+            style="
+              display:none;
+              position:absolute;
+              top:-6px;
+              right:-6px;
+              background:red;
+              color:white;
+              border-radius:999px;
+              min-width:18px;
+              height:18px;
+              padding:0 4px;
+              font-size:11px;
+              font-weight:bold;
+              line-height:18px;
+              text-align:center;
+              border:2px solid #0b0f17;
+            "
+          >0</span>
+        </button>
 
         <button onclick="showProfile()" style="
           background:#171e2b;
