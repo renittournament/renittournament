@@ -73,6 +73,16 @@ function pageShell(content) {
           <div style="font-size:21px;font-weight:800;">RENIT</div>
           <div style="font-size:11px;color:#8892a5;">TOURNAMENT</div>
         </div>
+        <button onclick="showNotifications()" style="
+  background:#171e2b;
+  color:white;
+  border:1px solid #293346;
+  border-radius:10px;
+  padding:12px 14px;
+  font-size:20px;
+">
+  🔔
+</button>
 
         <button onclick="showProfile()" style="
           background:#171e2b;
@@ -105,7 +115,88 @@ function pageShell(content) {
     </div>
   `;
 }
+async function showNotifications() {
+  if (!currentUser) {
+    loginPage();
+    return;
+  }
 
+  const { data, error } = await db
+    .from("notifications")
+    .select("*")
+    .eq("user_id", currentUser.id)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error(error);
+    alert("Notifications load করা যায়নি: " + error.message);
+    return;
+  }
+
+  app.innerHTML = pageShell(`
+    <main style="padding:18px 16px 90px;">
+      <button onclick="home()" style="
+        background:none;
+        border:0;
+        color:#9ba6b8;
+        padding:0;
+        margin-bottom:15px;
+        font-size:16px;
+      ">
+        ← Back
+      </button>
+
+      <h2>🔔 Notifications</h2>
+
+      ${
+        data && data.length
+          ? data.map(n => `
+            <div style="
+              background:#101521;
+              border:1px solid #202838;
+              border-radius:14px;
+              padding:16px;
+              margin-bottom:12px;
+            ">
+              <div style="
+                font-size:17px;
+                font-weight:bold;
+                margin-bottom:6px;
+              ">
+                ${esc(n.title)}
+              </div>
+
+              <div style="
+                color:#aeb8c8;
+                margin-bottom:8px;
+              ">
+                ${esc(n.message)}
+              </div>
+
+              <div style="
+                color:#68748a;
+                font-size:12px;
+              ">
+                ${new Date(n.created_at).toLocaleString()}
+              </div>
+            </div>
+          `).join("")
+          : `
+            <div style="
+              background:#101521;
+              border:1px solid #202838;
+              border-radius:14px;
+              padding:25px;
+              text-align:center;
+              color:#8f9bb0;
+            ">
+              এখনো কোনো notification নেই।
+            </div>
+          `
+      }
+    </main>
+  `);
+}
 function navBtn() {
   return `
     background:none;
