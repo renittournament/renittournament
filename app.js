@@ -180,7 +180,17 @@ async function showNotifications() {
     alert("Notifications load করা যায়নি: " + error.message);
     return;
   }
+  if (data && data.length) {
+    const { error: readError } = await db
+      .from("notifications")
+      .update({ is_read: true })
+      .eq("user_id", currentUser.id)
+      .eq("is_read", false);
 
+    if (readError) {
+      console.error(readError);
+    }
+  }
   app.innerHTML = pageShell(`
     <main style="padding:18px 16px 90px;">
       <button onclick="home()" style="
