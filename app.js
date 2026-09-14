@@ -2063,20 +2063,40 @@ async function joinTournament(id) {
     return;
   }
 
+  const gameName = prompt("আপনার Game Name লিখুন:");
+
+  if (gameName === null) {
+    return;
+  }
+
+  const cleanGameName = gameName.trim();
+
+  if (!cleanGameName) {
+    alert("Game Name দিতে হবে।");
+    return;
+  }
+
+  if (cleanGameName.length > 30) {
+    alert("Game Name সর্বোচ্চ 30 characters হতে পারবে।");
+    return;
+  }
+
   const { data, error } = await db.rpc(
     "join_tournament",
     {
-      p_tournament_id: id
+      p_tournament_id: id,
+      p_game_name: cleanGameName
     }
   );
 
   if (error) {
+    console.log(error);
     alert("Join করা যায়নি: " + error.message);
     return;
   }
 
   alert(
-    `Tournament joined successfully!\nEntry Fee: ৳${data.fee}\nRemaining Balance: ৳${data.balance}`
+    `Tournament joined successfully!\nGame Name: ${cleanGameName}\nEntry Fee: ৳${data.fee}\nRemaining Balance: ৳${data.balance}`
   );
 
   await openMatch(id);
