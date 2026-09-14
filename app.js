@@ -3885,6 +3885,227 @@ async function openAdmin() {
       </div>
 
 
+            <!-- EDIT TOURNAMENT -->
+      <div style="
+        background:#101521;
+        border:1px solid #263044;
+        border-radius:18px;
+        padding:17px;
+        margin-bottom:14px;
+      ">
+
+        <div style="
+          display:flex;
+          align-items:center;
+          gap:10px;
+          margin-bottom:14px;
+        ">
+
+          <div style="
+            width:40px;
+            height:40px;
+            border-radius:12px;
+            background:#182235;
+            border:1px solid #2c3b55;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:19px;
+          ">
+            ✏️
+          </div>
+
+          <div>
+            <div style="
+              font-size:18px;
+              font-weight:800;
+            ">
+              Edit Tournament
+            </div>
+
+            <div style="
+              color:#718097;
+              font-size:11px;
+              margin-top:2px;
+            ">
+              Update tournament information
+            </div>
+          </div>
+
+        </div>
+
+        <select
+          id="editTournamentId"
+          onchange="loadEditTournamentData()"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #29364d;
+            border-radius:11px;
+            padding:13px;
+            outline:none;
+          "
+        >
+          <option value="">
+            Loading tournaments...
+          </option>
+        </select>
+
+        <input
+          id="editTournamentTitle"
+          type="text"
+          placeholder="Tournament title"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #29364d;
+            border-radius:11px;
+            padding:13px;
+            margin-top:10px;
+            outline:none;
+          "
+        >
+
+        <select
+          id="editTournamentGame"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #29364d;
+            border-radius:11px;
+            padding:13px;
+            margin-top:10px;
+            outline:none;
+          "
+        >
+          <option value="BR MATCH">BR MATCH</option>
+          <option value="BR-DUO">BR-DUO</option>
+          <option value="FREE FIRE">FREE FIRE</option>
+          <option value="CS 4 VS 4">CS 4 VS 4</option>
+          <option value="LONE WOLF">LONE WOLF</option>
+          <option value="SPECIAL MATCH">SPECIAL MATCH</option>
+          <option value="CUSTOM 2VS2 HEADSHOOT">CUSTOM 2VS2 HEADSHOOT</option>
+          <option value="LONE WOLF HEADSHOOT">LONE WOLF HEADSHOOT</option>
+          <option value="LOST TO WIN">LOST TO WIN</option>
+          <option value="FREE MATCH">FREE MATCH</option>
+        </select>
+
+        <input
+          id="editTournamentMode"
+          type="text"
+          placeholder="Mode"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #29364d;
+            border-radius:11px;
+            padding:13px;
+            margin-top:10px;
+            outline:none;
+          "
+        >
+
+        <div style="
+          display:grid;
+          grid-template-columns:1fr 1fr;
+          gap:10px;
+          margin-top:10px;
+        ">
+
+          <input
+            id="editTournamentEntryFee"
+            type="number"
+            min="0"
+            placeholder="Entry fee"
+            style="
+              width:100%;
+              box-sizing:border-box;
+              background:#111722;
+              color:white;
+              border:1px solid #29364d;
+              border-radius:11px;
+              padding:13px;
+              outline:none;
+            "
+          >
+
+          <input
+            id="editTournamentPrizePool"
+            type="number"
+            min="0"
+            placeholder="Prize pool"
+            style="
+              width:100%;
+              box-sizing:border-box;
+              background:#111722;
+              color:white;
+              border:1px solid #29364d;
+              border-radius:11px;
+              padding:13px;
+              outline:none;
+            "
+          >
+
+        </div>
+
+        <input
+          id="editTournamentMaxPlayers"
+          type="number"
+          min="1"
+          placeholder="Maximum players"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #29364d;
+            border-radius:11px;
+            padding:13px;
+            margin-top:10px;
+            outline:none;
+          "
+        >
+
+        <input
+          id="editTournamentStartTime"
+          type="datetime-local"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #29364d;
+            border-radius:11px;
+            padding:13px;
+            margin-top:10px;
+            outline:none;
+          "
+        >
+
+        ${primaryBtn(
+          "Update Tournament",
+          "updateTournament()"
+        )}
+
+        <div
+          id="editTournamentMessage"
+          style="
+            margin-top:10px;
+            color:#9ba6b8;
+            font-size:12px;
+            line-height:1.5;
+          "
+        ></div>
+
+      </div>
       <!-- DEPOSIT REQUESTS -->
       <div style="
         background:#101521;
@@ -4340,6 +4561,245 @@ async function openAdmin() {
   await loadRoomTournaments();
   await loadResultTournaments();
   await loadStatusTournaments();
+  await loadEditTournaments();
+}
+async function loadEditTournaments() {
+  const select =
+    document.getElementById("editTournamentId");
+
+  if (!select) return;
+
+  const { data, error } = await db
+    .from("tournaments")
+    .select(`
+      id,
+      title,
+      game,
+      mode,
+      entry_fee,
+      prize_pool,
+      max_players,
+      start_time
+    `)
+    .order("start_time", {
+      ascending: false,
+      nullsFirst: false
+    });
+
+  if (error) {
+    console.log(error);
+    select.innerHTML = `
+      <option value="">
+        Failed to load tournaments
+      </option>
+    `;
+    return;
+  }
+
+  if (!data || !data.length) {
+    select.innerHTML = `
+      <option value="">
+        No tournaments found
+      </option>
+    `;
+    return;
+  }
+
+  select.innerHTML = `
+    <option value="">
+      Select tournament
+    </option>
+    ${data.map(t => `
+      <option value="${esc(t.id)}">
+        ${esc(t.title)}
+      </option>
+    `).join("")}
+  `;
+}
+
+
+async function loadEditTournamentData() {
+  const id =
+    document.getElementById("editTournamentId")?.value;
+
+  if (!id) return;
+
+  const { data, error } = await db
+    .from("tournaments")
+    .select(`
+      id,
+      title,
+      game,
+      mode,
+      entry_fee,
+      prize_pool,
+      max_players,
+      start_time
+    `)
+    .eq("id", Number(id))
+    .maybeSingle();
+
+  if (error) {
+    console.log(error);
+    return;
+  }
+
+  if (!data) return;
+
+  document.getElementById(
+    "editTournamentTitle"
+  ).value = data.title || "";
+
+  document.getElementById(
+    "editTournamentGame"
+  ).value = data.game || "BR MATCH";
+
+  document.getElementById(
+    "editTournamentMode"
+  ).value = data.mode || "Solo";
+
+  document.getElementById(
+    "editTournamentEntryFee"
+  ).value = data.entry_fee ?? 0;
+
+  document.getElementById(
+    "editTournamentPrizePool"
+  ).value = data.prize_pool ?? 0;
+
+  document.getElementById(
+    "editTournamentMaxPlayers"
+  ).value = data.max_players ?? 1;
+
+  if (data.start_time) {
+    const date = new Date(data.start_time);
+
+    const local =
+      new Date(
+        date.getTime() -
+        date.getTimezoneOffset() * 60000
+      )
+      .toISOString()
+      .slice(0, 16);
+
+    document.getElementById(
+      "editTournamentStartTime"
+    ).value = local;
+  } else {
+    document.getElementById(
+      "editTournamentStartTime"
+    ).value = "";
+  }
+}
+async function updateTournament() {
+  if (!(await isAdmin())) {
+    alert("Admin access denied.");
+    return;
+  }
+
+  const tournamentId =
+    document.getElementById("editTournamentId").value;
+
+  const title =
+    document.getElementById("editTournamentTitle").value.trim();
+
+  const game =
+    document.getElementById("editTournamentGame").value;
+
+  const mode =
+    document.getElementById("editTournamentMode").value.trim();
+
+  const entryFee =
+    Number(
+      document.getElementById("editTournamentEntryFee").value
+    );
+
+  const prizePool =
+    Number(
+      document.getElementById("editTournamentPrizePool").value
+    );
+
+  const maxPlayers =
+    Number(
+      document.getElementById("editTournamentMaxPlayers").value
+    );
+
+  const startTime =
+    document.getElementById("editTournamentStartTime").value;
+
+  const msg =
+    document.getElementById("editTournamentMessage");
+
+
+  if (!tournamentId) {
+    msg.textContent = "Tournament select করুন।";
+    return;
+  }
+
+  if (!title) {
+    msg.textContent = "Tournament title দিন।";
+    return;
+  }
+
+  if (!game) {
+    msg.textContent = "Game select করুন।";
+    return;
+  }
+
+  if (!mode) {
+    msg.textContent = "Mode দিন।";
+    return;
+  }
+
+  if (!Number.isFinite(entryFee) || entryFee < 0) {
+    msg.textContent = "Entry fee ভুল।";
+    return;
+  }
+
+  if (!Number.isFinite(prizePool) || prizePool < 0) {
+    msg.textContent = "Prize pool ভুল।";
+    return;
+  }
+
+  if (!Number.isInteger(maxPlayers) || maxPlayers < 1) {
+    msg.textContent = "Maximum players ভুল।";
+    return;
+  }
+
+  msg.textContent = "Tournament update হচ্ছে...";
+
+
+  const { data, error } =
+    await db.rpc(
+      "admin_update_tournament",
+      {
+        p_tournament_id: Number(tournamentId),
+        p_title: title,
+        p_game: game,
+        p_mode: mode,
+        p_entry_fee: entryFee,
+        p_prize_pool: prizePool,
+        p_max_players: maxPlayers,
+        p_start_time: startTime
+          ? new Date(startTime).toISOString()
+          : null
+      }
+    );
+
+
+  if (error) {
+    console.log(error);
+
+    msg.textContent =
+      "Update করা যায়নি: " + error.message;
+
+    return;
+  }
+
+
+  msg.textContent =
+    "Tournament successfully updated!";
+
+  await loadEditTournaments();
 }
 async function loadStatusTournaments() {
   const select =
