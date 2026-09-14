@@ -2642,6 +2642,7 @@ async function openWallet() {
     💸 Withdraw Money
   </button>
 </div>
+<div id="withdrawMessage"></div>
 
       </div>
 
