@@ -2415,14 +2415,28 @@ async function submitDepositRequest() {
     return;
   }
 
-  const method = document.getElementById("depositMethod").value;
-  const amount = Number(document.getElementById("depositAmount").value);
+  const method =
+    document.getElementById("depositMethod").value;
+
+  const amount =
+    Number(document.getElementById("depositAmount").value);
+
+  const mobileNumber =
+    document.getElementById("depositMobileNumber").value.trim();
+
   const transactionId =
     document.getElementById("depositTransactionId").value.trim();
-  const msg = document.getElementById("depositMessage");
+
+  const msg =
+    document.getElementById("depositMessage");
 
   if (!amount || amount < 10) {
     msg.textContent = "Minimum deposit ৳10.";
+    return;
+  }
+
+  if (!mobileNumber) {
+    msg.textContent = "Mobile number দিন।";
     return;
   }
 
@@ -2431,7 +2445,8 @@ async function submitDepositRequest() {
     return;
   }
 
-  msg.textContent = "Request submit হচ্ছে...";
+  msg.textContent =
+    "Request submit হচ্ছে...";
 
   const { error } = await db
     .from("payment_requests")
@@ -2439,13 +2454,18 @@ async function submitDepositRequest() {
       user_id: currentUser.id,
       method: method,
       amount: amount,
+      mobile_number: mobileNumber,
       transaction_id: transactionId,
       status: "pending"
     });
 
   if (error) {
     console.log(error);
-    msg.textContent = "Request submit করা যায়নি: " + error.message;
+
+    msg.textContent =
+      "Request submit করা যায়নি: " +
+      error.message;
+
     return;
   }
 
@@ -2453,6 +2473,7 @@ async function submitDepositRequest() {
     "Deposit request submitted. Admin approval-এর অপেক্ষায় আছে।";
 
   document.getElementById("depositAmount").value = "";
+  document.getElementById("depositMobileNumber").value = "";
   document.getElementById("depositTransactionId").value = "";
 
   loadDepositRequests();
