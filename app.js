@@ -4716,8 +4716,18 @@ async function loadAdminTournamentPlayers() {
 
   if (error) {
     console.log(error);
-    box.innerHTML =
-      "Players load করা যায়নি: " + error.message;
+
+    box.innerHTML = `
+      <div style="
+        padding:14px;
+        background:#0f172a;
+        border-radius:12px;
+        color:#f87171;
+      ">
+        Players load করা যায়নি: ${esc(error.message)}
+      </div>
+    `;
+
     return;
   }
 
@@ -4726,61 +4736,132 @@ async function loadAdminTournamentPlayers() {
       <div style="
         padding:14px;
         background:#0f172a;
-        border-radius:10px;
+        border-radius:12px;
         color:#94a3b8;
       ">
         No players joined this tournament yet.
       </div>
     `;
+
     return;
   }
 
   box.innerHTML = `
     <div style="
+      margin-bottom:14px;
       color:#94a3b8;
-      margin-bottom:10px;
       font-size:14px;
     ">
-      Total Players: ${data.length}
+      👥 Registered Players: ${data.length}
     </div>
 
     ${data.map((player, index) => `
       <div style="
-        display:flex;
-        align-items:center;
-        gap:12px;
-        padding:12px;
-        margin-bottom:8px;
         background:#0f172a;
         border:1px solid #263247;
-        border-radius:10px;
+        border-radius:14px;
+        padding:15px;
+        margin-bottom:10px;
       ">
+
         <div style="
-          width:32px;
-          height:32px;
-          border-radius:50%;
-          background:#1e293b;
           display:flex;
           align-items:center;
-          justify-content:center;
-          font-weight:700;
+          gap:10px;
+          margin-bottom:12px;
         ">
-          ${index + 1}
-        </div>
 
-        <div style="min-width:0;">
-          <div style="font-weight:700;">
-            ${esc(player.username || "Unknown")}
+          <div style="
+            width:34px;
+            height:34px;
+            border-radius:50%;
+            background:#1e293b;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-weight:700;
+            color:white;
+          ">
+            ${index + 1}
           </div>
 
           <div style="
-            color:#94a3b8;
-            font-size:13px;
-            word-break:break-all;
+            font-weight:700;
+            color:white;
           ">
-            ${esc(player.email || "")}
+            Player #${index + 1}
+          </div>
+
+        </div>
+
+        <div style="
+          padding:10px 12px;
+          background:#111827;
+          border-radius:9px;
+          margin-bottom:7px;
+        ">
+          <div style="
+            font-size:12px;
+            color:#64748b;
+            margin-bottom:3px;
+          ">
+            🎮 Game ID Name
+          </div>
+
+          <div style="
+            color:white;
+            font-weight:700;
+            word-break:break-word;
+          ">
+            ${esc(player.game_name || "Not provided")}
           </div>
         </div>
+
+        <div style="
+          padding:10px 12px;
+          background:#111827;
+          border-radius:9px;
+          margin-bottom:7px;
+        ">
+          <div style="
+            font-size:12px;
+            color:#64748b;
+            margin-bottom:3px;
+          ">
+            👤 Username
+          </div>
+
+          <div style="
+            color:white;
+            font-weight:700;
+            word-break:break-word;
+          ">
+            ${esc(player.username || "Unknown")}
+          </div>
+        </div>
+
+        <div style="
+          padding:10px 12px;
+          background:#111827;
+          border-radius:9px;
+        ">
+          <div style="
+            font-size:12px;
+            color:#64748b;
+            margin-bottom:3px;
+          ">
+            📧 Email
+          </div>
+
+          <div style="
+            color:#cbd5e1;
+            font-size:14px;
+            word-break:break-all;
+          ">
+            ${esc(player.email || "No email")}
+          </div>
+        </div>
+
       </div>
     `).join("")}
   `;
