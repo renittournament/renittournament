@@ -3282,16 +3282,115 @@ async function openAdmin() {
   }
 
   app.innerHTML = pageShell(`
-    <main style="padding:18px 16px 90px;">
-      <h2>Admin Panel</h2>
+    <main style="
+      padding:18px 16px 100px;
+      max-width:760px;
+      margin:auto;
+    ">
 
+      <!-- HEADER -->
+      <div style="
+        margin-bottom:16px;
+      ">
+
+        <div style="
+          color:#718097;
+          font-size:11px;
+          font-weight:800;
+          letter-spacing:1.5px;
+          margin-bottom:5px;
+        ">
+          RENIT CONTROL CENTER
+        </div>
+
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          gap:10px;
+        ">
+
+          <h2 style="
+            margin:0;
+            font-size:25px;
+          ">
+            ⚙️ Admin Dashboard
+          </h2>
+
+          <div style="
+            background:#14251d;
+            border:1px solid #28543b;
+            color:#4ade80;
+            padding:6px 9px;
+            border-radius:9px;
+            font-size:10px;
+            font-weight:800;
+          ">
+            ADMIN
+          </div>
+
+        </div>
+
+        <div style="
+          color:#718097;
+          font-size:12px;
+          margin-top:6px;
+        ">
+          Manage tournaments, payments, rooms and results
+        </div>
+
+      </div>
+
+
+      <!-- CREATE TOURNAMENT -->
       <div style="
         background:#101521;
-        border:1px solid #202838;
-        border-radius:14px;
-        padding:16px;
+        border:1px solid #263044;
+        border-radius:18px;
+        padding:17px;
+        margin-bottom:14px;
       ">
-        <h3 style="margin-top:0;">Create Tournament</h3>
+
+        <div style="
+          display:flex;
+          align-items:center;
+          gap:10px;
+          margin-bottom:14px;
+        ">
+
+          <div style="
+            width:40px;
+            height:40px;
+            border-radius:12px;
+            background:#182235;
+            border:1px solid #2c3b55;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:19px;
+          ">
+            🎮
+          </div>
+
+          <div>
+            <div style="
+              font-size:18px;
+              font-weight:800;
+            ">
+              Create Tournament
+            </div>
+
+            <div style="
+              color:#718097;
+              font-size:11px;
+              margin-top:2px;
+            ">
+              Create a new tournament
+            </div>
+          </div>
+
+        </div>
+
 
         <input
           id="tournamentTitle"
@@ -3302,13 +3401,13 @@ async function openAdmin() {
             box-sizing:border-box;
             background:#111722;
             color:white;
-            border:1px solid #293346;
-            border-radius:10px;
+            border:1px solid #29364d;
+            border-radius:11px;
             padding:13px;
-            margin-top:10px;
             outline:none;
           "
         >
+
 
         <select
           id="tournamentGame"
@@ -3317,8 +3416,8 @@ async function openAdmin() {
             box-sizing:border-box;
             background:#111722;
             color:white;
-            border:1px solid #293346;
-            border-radius:10px;
+            border:1px solid #29364d;
+            border-radius:11px;
             padding:13px;
             margin-top:10px;
             outline:none;
@@ -3336,6 +3435,7 @@ async function openAdmin() {
           <option value="FREE MATCH">FREE MATCH</option>
         </select>
 
+
         <input
           id="tournamentMode"
           type="text"
@@ -3346,49 +3446,58 @@ async function openAdmin() {
             box-sizing:border-box;
             background:#111722;
             color:white;
-            border:1px solid #293346;
-            border-radius:10px;
+            border:1px solid #29364d;
+            border-radius:11px;
             padding:13px;
             margin-top:10px;
             outline:none;
           "
         >
 
-        <input
-          id="tournamentEntryFee"
-          type="number"
-          min="0"
-          placeholder="Entry fee"
-          style="
-            width:100%;
-            box-sizing:border-box;
-            background:#111722;
-            color:white;
-            border:1px solid #293346;
-            border-radius:10px;
-            padding:13px;
-            margin-top:10px;
-            outline:none;
-          "
-        >
 
-        <input
-          id="tournamentPrizePool"
-          type="number"
-          min="0"
-          placeholder="Prize pool"
-          style="
-            width:100%;
-            box-sizing:border-box;
-            background:#111722;
-            color:white;
-            border:1px solid #293346;
-            border-radius:10px;
-            padding:13px;
-            margin-top:10px;
-            outline:none;
-          "
-        >
+        <div style="
+          display:grid;
+          grid-template-columns:1fr 1fr;
+          gap:10px;
+          margin-top:10px;
+        ">
+
+          <input
+            id="tournamentEntryFee"
+            type="number"
+            min="0"
+            placeholder="Entry fee"
+            style="
+              width:100%;
+              box-sizing:border-box;
+              background:#111722;
+              color:white;
+              border:1px solid #29364d;
+              border-radius:11px;
+              padding:13px;
+              outline:none;
+            "
+          >
+
+          <input
+            id="tournamentPrizePool"
+            type="number"
+            min="0"
+            placeholder="Prize pool"
+            style="
+              width:100%;
+              box-sizing:border-box;
+              background:#111722;
+              color:white;
+              border:1px solid #29364d;
+              border-radius:11px;
+              padding:13px;
+              outline:none;
+            "
+          >
+
+        </div>
+
 
         <input
           id="tournamentMaxPlayers"
@@ -3400,13 +3509,14 @@ async function openAdmin() {
             box-sizing:border-box;
             background:#111722;
             color:white;
-            border:1px solid #293346;
-            border-radius:10px;
+            border:1px solid #29364d;
+            border-radius:11px;
             padding:13px;
             margin-top:10px;
             outline:none;
           "
         >
+
 
         <input
           id="tournamentStartTime"
@@ -3416,267 +3526,486 @@ async function openAdmin() {
             box-sizing:border-box;
             background:#111722;
             color:white;
-            border:1px solid #293346;
-            border-radius:10px;
+            border:1px solid #29364d;
+            border-radius:11px;
             padding:13px;
             margin-top:10px;
             outline:none;
           "
         >
 
+
         ${primaryBtn(
           "Create Tournament",
           "createTournament()"
         )}
 
+
         <div
           id="createTournamentMessage"
           style="
-            margin-top:12px;
+            margin-top:10px;
             color:#9ba6b8;
-            font-size:13px;
+            font-size:12px;
+            line-height:1.5;
           "
         ></div>
+
       </div>
 
+
+      <!-- DEPOSIT REQUESTS -->
       <div style="
-        margin-top:15px;
         background:#101521;
-        border:1px solid #202838;
-        border-radius:14px;
-        padding:16px;
+        border:1px solid #263044;
+        border-radius:18px;
+        padding:17px;
+        margin-bottom:14px;
       ">
-       <div style="
-  margin-bottom:15px;
-  background:#101521;
-  border:1px solid #202838;
-  border-radius:14px;
-  padding:16px;
-">
-  <h3 style="margin-top:0;">Publish Room Information</h3>
 
-  <select id="roomTournamentId" style="
-    width:100%;
-    box-sizing:border-box;
-    background:#111722;
-    color:white;
-    border:1px solid #293346;
-    border-radius:10px;
-    padding:13px;
-    margin-top:10px;
-  ">
-    <option value="">Loading tournaments...</option>
-  </select>
-
-  <input
-    id="roomIdInput"
-    type="text"
-    placeholder="Room ID"
-    style="
-      width:100%;
-      box-sizing:border-box;
-      background:#111722;
-      color:white;
-      border:1px solid #293346;
-      border-radius:10px;
-      padding:13px;
-      margin-top:10px;
-      outline:none;
-    "
-  >
-
-  <input
-    id="roomPasswordInput"
-    type="text"
-    placeholder="Room Password"
-    style="
-      width:100%;
-      box-sizing:border-box;
-      background:#111722;
-      color:white;
-      border:1px solid #293346;
-      border-radius:10px;
-      padding:13px;
-      margin-top:10px;
-      outline:none;
-    "
-  >
-
-  ${primaryBtn(
-    "Publish Room",
-    "publishTournamentRoom()"
-  )}
-
-  <div id="roomPublishMessage" style="
-    margin-top:10px;
-    color:#9ba6b8;
-    font-size:13px;
-  "></div>
-</div> 
         <div style="
-  margin-bottom:15px;
-  background:#101521;
-  border:1px solid #202838;
-  border-radius:14px;
-  padding:16px;
-">
-  <div style="
-  margin-bottom:15px;
-  background:#101521;
-  border:1px solid #202838;
-  border-radius:14px;
-  padding:16px;
-">
-  <h3 style="margin-top:0;">Tournament Status</h3>
+          display:flex;
+          align-items:center;
+          gap:10px;
+          margin-bottom:13px;
+        ">
 
-  <select
-    id="statusTournamentId"
-    style="
-      width:100%;
-      box-sizing:border-box;
-      background:#111722;
-      color:white;
-      border:1px solid #293346;
-      border-radius:10px;
-      padding:13px;
-      margin-top:10px;
-      outline:none;
-    "
-  >
-    <option value="">Loading tournaments...</option>
-  </select>
+          <div style="
+            width:40px;
+            height:40px;
+            border-radius:12px;
+            background:#182235;
+            border:1px solid #2c3b55;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:19px;
+          ">
+            💳
+          </div>
 
-  <select
-    id="tournamentStatus"
-    style="
-      width:100%;
-      box-sizing:border-box;
-      background:#111722;
-      color:white;
-      border:1px solid #293346;
-      border-radius:10px;
-      padding:13px;
-      margin-top:10px;
-      outline:none;
-    "
-  >
-    <option value="">Select status</option>
-    <option value="upcoming">Upcoming</option>
-    <option value="live">Live</option>
-    <option value="completed">Completed</option>
-  </select>
+          <div>
+            <div style="
+              font-size:18px;
+              font-weight:800;
+            ">
+              Deposit Requests
+            </div>
 
-  ${primaryBtn(
-    "Update Status",
-    "updateTournamentStatus()"
-  )}
+            <div style="
+              color:#718097;
+              font-size:11px;
+              margin-top:2px;
+            ">
+              Review player payment requests
+            </div>
+          </div>
 
-  <div
-    id="statusUpdateMessage"
-    style="
-      margin-top:10px;
-      color:#9ba6b8;
-      font-size:13px;
-    "
-  ></div>
-</div>
-  <h3 style="margin-top:0;">Tournament Results</h3>
-
-  <select
-    id="resultTournamentId"
-    style="
-      width:100%;
-      box-sizing:border-box;
-      background:#111722;
-      color:white;
-      border:1px solid #293346;
-      border-radius:10px;
-      padding:13px;
-      margin-top:10px;
-      outline:none;
-    "
-  >
-    <option value="">Loading tournaments...</option>
-  </select>
-
-  <select
-    id="resultPlayerId"
-    style="
-      width:100%;
-      box-sizing:border-box;
-      background:#111722;
-      color:white;
-      border:1px solid #293346;
-      border-radius:10px;
-      padding:13px;
-      margin-top:10px;
-      outline:none;
-    "
-  >
-    <option value="">Select player</option>
-  </select>
-
-  <select
-    id="resultPosition"
-    style="
-      width:100%;
-      box-sizing:border-box;
-      background:#111722;
-      color:white;
-      border:1px solid #293346;
-      border-radius:10px;
-      padding:13px;
-      margin-top:10px;
-      outline:none;
-    "
-  >
-    <option value="">Select position</option>
-    <option value="1">1st Place</option>
-    <option value="2">2nd Place</option>
-    <option value="3">3rd Place</option>
-  </select>
-
-  <input
-    id="resultPrizeAmount"
-    type="number"
-    min="0"
-    placeholder="Prize Amount"
-    style="
-      width:100%;
-      box-sizing:border-box;
-      background:#111722;
-      color:white;
-      border:1px solid #293346;
-      border-radius:10px;
-      padding:13px;
-      margin-top:10px;
-      outline:none;
-    "
-  >
-
-  ${primaryBtn(
-    "Save Result",
-    "saveTournamentResult()"
-  )}
-
-  <div
-    id="resultSaveMessage"
-    style="
-      margin-top:10px;
-      color:#9ba6b8;
-      font-size:13px;
-    "
-  ></div>
-</div>
-        <h3 style="margin-top:0;">Deposit Requests</h3>
+        </div>
 
         <div id="adminDepositRequests">
           Loading...
         </div>
+
       </div>
+
+
+      <!-- ROOM INFORMATION -->
+      <div style="
+        background:#101521;
+        border:1px solid #263044;
+        border-radius:18px;
+        padding:17px;
+        margin-bottom:14px;
+      ">
+
+        <div style="
+          display:flex;
+          align-items:center;
+          gap:10px;
+          margin-bottom:13px;
+        ">
+
+          <div style="
+            width:40px;
+            height:40px;
+            border-radius:12px;
+            background:#182235;
+            border:1px solid #2c3b55;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:19px;
+          ">
+            🔑
+          </div>
+
+          <div>
+            <div style="
+              font-size:18px;
+              font-weight:800;
+            ">
+              Publish Room Information
+            </div>
+
+            <div style="
+              color:#718097;
+              font-size:11px;
+              margin-top:2px;
+            ">
+              Give joined players their room details
+            </div>
+          </div>
+
+        </div>
+
+
+        <select
+          id="roomTournamentId"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #29364d;
+            border-radius:11px;
+            padding:13px;
+            outline:none;
+          "
+        >
+          <option value="">
+            Loading tournaments...
+          </option>
+        </select>
+
+
+        <input
+          id="roomIdInput"
+          type="text"
+          placeholder="Room ID"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #29364d;
+            border-radius:11px;
+            padding:13px;
+            margin-top:10px;
+            outline:none;
+          "
+        >
+
+
+        <input
+          id="roomPasswordInput"
+          type="text"
+          placeholder="Room Password"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #29364d;
+            border-radius:11px;
+            padding:13px;
+            margin-top:10px;
+            outline:none;
+          "
+        >
+
+
+        ${primaryBtn(
+          "Publish Room",
+          "publishTournamentRoom()"
+        )}
+
+
+        <div
+          id="roomPublishMessage"
+          style="
+            margin-top:10px;
+            color:#9ba6b8;
+            font-size:12px;
+          "
+        ></div>
+
+      </div>
+
+
+      <!-- TOURNAMENT STATUS -->
+      <div style="
+        background:#101521;
+        border:1px solid #263044;
+        border-radius:18px;
+        padding:17px;
+        margin-bottom:14px;
+      ">
+
+        <div style="
+          display:flex;
+          align-items:center;
+          gap:10px;
+          margin-bottom:13px;
+        ">
+
+          <div style="
+            width:40px;
+            height:40px;
+            border-radius:12px;
+            background:#182235;
+            border:1px solid #2c3b55;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:19px;
+          ">
+            📡
+          </div>
+
+          <div>
+            <div style="
+              font-size:18px;
+              font-weight:800;
+            ">
+              Tournament Status
+            </div>
+
+            <div style="
+              color:#718097;
+              font-size:11px;
+              margin-top:2px;
+            ">
+              Control tournament availability
+            </div>
+          </div>
+
+        </div>
+
+
+        <select
+          id="statusTournamentId"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #29364d;
+            border-radius:11px;
+            padding:13px;
+            outline:none;
+          "
+        >
+          <option value="">
+            Loading tournaments...
+          </option>
+        </select>
+
+
+        <select
+          id="tournamentStatus"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #29364d;
+            border-radius:11px;
+            padding:13px;
+            margin-top:10px;
+            outline:none;
+          "
+        >
+          <option value="">
+            Select status
+          </option>
+          <option value="upcoming">
+            Upcoming
+          </option>
+          <option value="live">
+            Live
+          </option>
+          <option value="completed">
+            Completed
+          </option>
+        </select>
+
+
+        ${primaryBtn(
+          "Update Status",
+          "updateTournamentStatus()"
+        )}
+
+
+        <div
+          id="statusUpdateMessage"
+          style="
+            margin-top:10px;
+            color:#9ba6b8;
+            font-size:12px;
+          "
+        ></div>
+
+      </div>
+
+
+      <!-- TOURNAMENT RESULTS -->
+      <div style="
+        background:#101521;
+        border:1px solid #263044;
+        border-radius:18px;
+        padding:17px;
+      ">
+
+        <div style="
+          display:flex;
+          align-items:center;
+          gap:10px;
+          margin-bottom:13px;
+        ">
+
+          <div style="
+            width:40px;
+            height:40px;
+            border-radius:12px;
+            background:#182235;
+            border:1px solid #2c3b55;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:19px;
+          ">
+            🏆
+          </div>
+
+          <div>
+            <div style="
+              font-size:18px;
+              font-weight:800;
+            ">
+              Tournament Results
+            </div>
+
+            <div style="
+              color:#718097;
+              font-size:11px;
+              margin-top:2px;
+            ">
+              Publish player positions and prizes
+            </div>
+          </div>
+
+        </div>
+
+
+        <select
+          id="resultTournamentId"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #29364d;
+            border-radius:11px;
+            padding:13px;
+            outline:none;
+          "
+        >
+          <option value="">
+            Loading tournaments...
+          </option>
+        </select>
+
+
+        <select
+          id="resultPlayerId"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #29364d;
+            border-radius:11px;
+            padding:13px;
+            margin-top:10px;
+            outline:none;
+          "
+        >
+          <option value="">
+            Select player
+          </option>
+        </select>
+
+
+        <select
+          id="resultPosition"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #29364d;
+            border-radius:11px;
+            padding:13px;
+            margin-top:10px;
+            outline:none;
+          "
+        >
+          <option value="">
+            Select position
+          </option>
+          <option value="1">
+            1st Place
+          </option>
+          <option value="2">
+            2nd Place
+          </option>
+          <option value="3">
+            3rd Place
+          </option>
+        </select>
+
+
+        <input
+          id="resultPrizeAmount"
+          type="number"
+          min="0"
+          placeholder="Prize Amount"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #29364d;
+            border-radius:11px;
+            padding:13px;
+            margin-top:10px;
+            outline:none;
+          "
+        >
+
+
+        ${primaryBtn(
+          "Save Result",
+          "saveTournamentResult()"
+        )}
+
+
+        <div
+          id="resultSaveMessage"
+          style="
+            margin-top:10px;
+            color:#9ba6b8;
+            font-size:12px;
+          "
+        ></div>
+
+      </div>
+
     </main>
   `);
-    await loadAdminDepositRequests();
+
+  await loadAdminDepositRequests();
   await loadRoomTournaments();
   await loadResultTournaments();
   await loadStatusTournaments();
