@@ -5185,10 +5185,94 @@ async function loadAdminWithdrawalRequests() {
         Status: ${esc(request.status)}
       </div>
 
+    ${request.status === "pending" ? `
+  <div style="
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+  ">
+
+    <button
+      onclick="processWithdrawalRequest(${request.id}, 'approve')"
+      style="
+        flex:1;
+        background:#1f5135;
+        color:white;
+        border:1px solid #34734d;
+        border-radius:9px;
+        padding:10px;
+        font-size:12px;
+        font-weight:800;
+      "
+    >
+      ✅ Approve
+    </button>
+
+    <button
+      onclick="processWithdrawalRequest(${request.id}, 'reject')"
+      style="
+        flex:1;
+        background:#51252b;
+        color:white;
+        border:1px solid #78353e;
+        border-radius:9px;
+        padding:10px;
+        font-size:12px;
+        font-weight:800;
+      "
+    >
+      ❌ Reject
+    </button>
+
+  </div>
+` : ""}
     </div>
   `).join("");
 }
 
+async function processWithdrawalRequest(
+  requestId,
+  action
+) {
+  const actionText =
+    action === "approve"
+      ? "approve"
+      : "reject";
+
+  const confirmed = confirm(
+    `এই withdrawal request ${actionText} করতে চান?`
+  );
+
+  if (!confirmed) return;
+
+  const { data, error } =
+    await db.rpc(
+      "process_withdrawal_request",
+      {
+        p_request_id: Number(requestId),
+        p_action: action
+      }
+    );
+
+  if (error) {
+    console.log(error);
+
+    alert(
+      "Withdrawal process করা যায়নি: " +
+      error.message
+    );
+
+    return;
+  }
+
+  alert(
+    action === "approve"
+      ? "Withdrawal approved successfully!"
+      : "Withdrawal rejected successfully!"
+  );
+
+  await loadAdminWithdrawalRequests();
+}
 async function loadAdminTournamentPlayers() {
   const select = document.getElementById("playersTournamentId");
   const box = document.getElementById("adminTournamentPlayers");
