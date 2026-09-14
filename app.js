@@ -2478,7 +2478,17 @@ async function submitDepositRequest() {
 
   loadDepositRequests();
 }
+function copyWalletNumber() {
+  const number = "01954732101";
 
+  navigator.clipboard.writeText(number)
+    .then(() => {
+      alert("Number copied!");
+    })
+    .catch(() => {
+      alert("Number copy করা যায়নি।");
+    });
+}
 async function loadDepositRequests() {
   if (!currentUser) return;
 
@@ -2693,21 +2703,46 @@ async function openWallet() {
   </div>
 
   <div style="
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  margin-top:5px;
+">
+
+  <div style="
     font-size:25px;
     font-weight:900;
-    margin-top:5px;
     letter-spacing:1px;
   ">
     01954732101
   </div>
 
-  <div style="
-    color:#9ba6b8;
-    font-size:12px;
-    margin-top:5px;
-  ">
-    Send Money
-  </div>
+  <button
+    onclick="copyWalletNumber()"
+    style="
+      background:#1e293b;
+      color:white;
+      border:1px solid #3b4a63;
+      border-radius:9px;
+      padding:7px 10px;
+      font-size:12px;
+      font-weight:800;
+      cursor:pointer;
+    "
+  >
+    📋 Copy
+  </button>
+
+</div>
+
+<div style="
+  color:#9ba6b8;
+  font-size:12px;
+  margin-top:5px;
+">
+  Send Money
+</div>
 
 </div>
 
