@@ -1042,68 +1042,278 @@ function matchCard(t) {
   const fee = tournamentFee(t);
   const prize = tournamentPrize(t);
   const slots = tournamentSlots(t);
+
   const joinedPlayers = Number(t.joined_players || 0);
+
   const remainingSlots = Math.max(
     Number(slots) - joinedPlayers,
     0
   );
 
+  const status =
+    String(t.status || "upcoming").toLowerCase();
+
+  let statusText = "UPCOMING";
+
+  if (status === "live") {
+    statusText = "🔴 LIVE";
+  } else if (status === "completed") {
+    statusText = "✅ COMPLETED";
+  } else {
+    statusText = "🟢 UPCOMING";
+  }
+
+  const progress =
+    Number(slots) > 0
+      ? Math.min(
+          (joinedPlayers / Number(slots)) * 100,
+          100
+        )
+      : 0;
+
   return `
     <div style="
-      background:#101521;
-      border:1px solid #202838;
-      border-radius:14px;
-      padding:16px;
-      margin-bottom:12px;
+      background:
+        radial-gradient(
+          circle at top right,
+          #1b2a43 0%,
+          transparent 45%
+        ),
+        linear-gradient(145deg,#121a28,#0d121b);
+      border:1px solid #29364d;
+      border-radius:18px;
+      padding:17px;
+      margin-bottom:14px;
+      box-shadow:0 10px 28px rgba(0,0,0,.22);
+      overflow:hidden;
     ">
-      <div style="
-        color:#8f9bb0;
-        font-size:12px;
-        margin-bottom:6px;
-      ">${esc(game)}</div>
 
-      <h3 style="margin:0 0 12px;">
+      <!-- Top Row -->
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:10px;
+        margin-bottom:10px;
+      ">
+
+        <div style="
+          display:flex;
+          align-items:center;
+          gap:8px;
+          min-width:0;
+        ">
+
+          <div style="
+            width:34px;
+            height:34px;
+            border-radius:10px;
+            background:#1d293c;
+            border:1px solid #33435c;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:17px;
+            flex-shrink:0;
+          ">
+            🎮
+          </div>
+
+          <div style="
+            color:#8f9bb0;
+            font-size:12px;
+            font-weight:700;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            white-space:nowrap;
+          ">
+            ${esc(game)}
+          </div>
+
+        </div>
+
+        <div style="
+          background:#172235;
+          border:1px solid #2d3c55;
+          border-radius:999px;
+          padding:6px 9px;
+          font-size:10px;
+          font-weight:800;
+          white-space:nowrap;
+        ">
+          ${statusText}
+        </div>
+
+      </div>
+
+
+      <!-- Tournament Title -->
+      <h3 style="
+        margin:0 0 15px;
+        font-size:20px;
+        line-height:1.25;
+        font-weight:800;
+      ">
         ${esc(title)}
       </h3>
 
+
+      <!-- Prize / Entry -->
       <div style="
         display:grid;
         grid-template-columns:1fr 1fr;
-        gap:8px;
-        color:#b8c1d1;
-        font-size:13px;
+        gap:9px;
+        margin-bottom:11px;
       ">
-        <div>Entry: ৳${esc(fee)}</div>
-        <div>Prize: ৳${esc(prize)}</div>
-        <div>Joined: ${esc(joinedPlayers)} / ${esc(slots)}</div>
-        <div>Remaining: ${esc(remainingSlots)}</div>
-        <div>Status: ${esc(t.status || "upcoming")}</div>
+
+        <div style="
+          background:#0d141f;
+          border:1px solid #202d41;
+          border-radius:12px;
+          padding:11px;
+        ">
+          <div style="
+            color:#718097;
+            font-size:10px;
+            font-weight:700;
+            margin-bottom:4px;
+          ">
+            ENTRY FEE
+          </div>
+
+          <div style="
+            font-size:18px;
+            font-weight:800;
+          ">
+            ৳${esc(fee)}
+          </div>
+        </div>
+
+        <div style="
+          background:#0d141f;
+          border:1px solid #202d41;
+          border-radius:12px;
+          padding:11px;
+        ">
+          <div style="
+            color:#718097;
+            font-size:10px;
+            font-weight:700;
+            margin-bottom:4px;
+          ">
+            PRIZE POOL
+          </div>
+
+          <div style="
+            font-size:18px;
+            font-weight:800;
+          ">
+            ৳${esc(prize)}
+          </div>
+        </div>
+
       </div>
 
-      <div style="margin-top:8px;">
-        Start: ${esc(tournamentStartTime(t))}
+
+      <!-- Slots -->
+      <div style="
+        background:#0d141f;
+        border:1px solid #202d41;
+        border-radius:12px;
+        padding:12px;
+        margin-bottom:11px;
+      ">
+
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          margin-bottom:8px;
+          font-size:12px;
+        ">
+
+          <span style="color:#9ba6b8;">
+            👥 Players
+          </span>
+
+          <span style="
+            color:#fff;
+            font-weight:800;
+          ">
+            ${esc(joinedPlayers)} / ${esc(slots)}
+          </span>
+
+        </div>
+
+        <div style="
+          height:6px;
+          background:#1b2535;
+          border-radius:999px;
+          overflow:hidden;
+        ">
+          <div style="
+            width:${progress}%;
+            height:100%;
+            background:#60a5fa;
+            border-radius:999px;
+          "></div>
+        </div>
+
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          margin-top:7px;
+          font-size:11px;
+          color:#718097;
+        ">
+          <span>
+            ${esc(remainingSlots)} slots remaining
+          </span>
+
+          <span>
+            ${Math.round(progress)}% full
+          </span>
+        </div>
+
       </div>
+
+
+      <!-- Start Time -->
+      <div style="
+        color:#9ba6b8;
+        font-size:12px;
+        margin-bottom:8px;
+      ">
+        🕒 Start: ${esc(tournamentStartTime(t))}
+      </div>
+
+
+      <!-- Countdown -->
       <div
-  id="countdown-${esc(t.id || "")}"
-  style="
-    margin-top:8px;
-    padding:10px;
-    background:#0b0f17;
-    border:1px solid #202838;
-    border-radius:10px;
-    color:#60a5fa;
-    font-size:13px;
-    font-weight:700;
-    text-align:center;
-  "
->
-  ⏳ Countdown loading...
-</div>
+        id="countdown-${esc(t.id || "")}"
+        style="
+          margin-top:8px;
+          margin-bottom:12px;
+          padding:12px;
+          background:#0a1019;
+          border:1px solid #26364e;
+          border-radius:12px;
+          color:#60a5fa;
+          font-size:13px;
+          font-weight:800;
+          text-align:center;
+        "
+      >
+        ⏳ Countdown loading...
+      </div>
 
+
+      <!-- Join Button -->
       ${primaryBtn(
         "View & Join",
         `openMatch('${esc(t.id || "")}')`
       )}
+
     </div>
   `;
 }
