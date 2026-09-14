@@ -2880,6 +2880,21 @@ async function showProfile() {
     t => String(t.status || "").toLowerCase() === "upcoming"
   ).length;
 
+    const { data: playerStats, error: playerStatsError } =
+    await db.rpc("get_my_player_stats");
+
+  if (playerStatsError) {
+    console.log(playerStatsError);
+  }
+
+  const stats = playerStats?.[0] || {
+    matches_played: 0,
+    wins: 0,
+    top_three: 0,
+    total_prize: 0,
+    win_rate: 0
+  };
+
   const username =
     currentProfile?.username ||
     currentUser?.user_metadata?.username ||
@@ -3062,99 +3077,173 @@ async function showProfile() {
       </div>
 
 
-      <!-- STATS -->
+      <!-- PLAYER STATS -->
       <div style="
-        margin-top:14px;
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:10px;
+        margin-top:15px;
+        background:#101521;
+        border:1px solid #263044;
+        border-radius:17px;
+        padding:17px;
       ">
 
-        <!-- JOINED -->
         <div style="
-          background:#101521;
-          border:1px solid #263044;
-          border-radius:15px;
-          padding:15px;
+          display:flex;
+          align-items:center;
+          gap:10px;
+          margin-bottom:14px;
         ">
 
           <div style="
+            width:38px;
+            height:38px;
+            border-radius:11px;
+            background:#1a2536;
+            border:1px solid #2d3c55;
             display:flex;
-            justify-content:space-between;
             align-items:center;
+            justify-content:center;
+            font-size:19px;
           ">
-
-            <span style="
-              color:#718097;
-              font-size:10px;
-              font-weight:800;
-            ">
-              JOINED
-            </span>
-
-            <span style="font-size:17px;">
-              🎮
-            </span>
-
+            📊
           </div>
 
-          <div style="
-            font-size:25px;
-            font-weight:900;
-            margin-top:6px;
-          ">
-            ${esc(totalJoined)}
+          <div>
+            <div style="
+              font-size:18px;
+              font-weight:800;
+            ">
+              Player Stats
+            </div>
+
+            <div style="
+              color:#718097;
+              font-size:11px;
+              margin-top:2px;
+            ">
+              Your tournament performance
+            </div>
           </div>
 
         </div>
 
 
-        <!-- LIVE -->
         <div style="
-          background:#101521;
-          border:1px solid #263044;
-          border-radius:15px;
-          padding:15px;
+          display:grid;
+          grid-template-columns:1fr 1fr;
+          gap:10px;
         ">
 
+          <!-- MATCHES -->
           <div style="
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
+            background:#0b0f17;
+            border:1px solid #202838;
+            border-radius:14px;
+            padding:14px;
           ">
-
-            <span style="
+            <div style="
               color:#718097;
               font-size:10px;
               font-weight:800;
             ">
-              LIVE
-            </span>
+              MATCHES
+            </div>
 
-            <span style="font-size:17px;">
-              🔴
-            </span>
-
+            <div style="
+              font-size:24px;
+              font-weight:900;
+              margin-top:5px;
+            ">
+              ${esc(stats.matches_played)}
+            </div>
           </div>
 
+
+          <!-- WINS -->
           <div style="
-            font-size:25px;
-            font-weight:900;
-            margin-top:6px;
-            color:#4ade80;
+            background:#0b0f17;
+            border:1px solid #202838;
+            border-radius:14px;
+            padding:14px;
           ">
-            ${esc(liveCount)}
+            <div style="
+              color:#718097;
+              font-size:10px;
+              font-weight:800;
+            ">
+              WINS
+            </div>
+
+            <div style="
+              font-size:24px;
+              font-weight:900;
+              margin-top:5px;
+              color:#4ade80;
+            ">
+              ${esc(stats.wins)}
+            </div>
+          </div>
+
+
+          <!-- TOP 3 -->
+          <div style="
+            background:#0b0f17;
+            border:1px solid #202838;
+            border-radius:14px;
+            padding:14px;
+          ">
+            <div style="
+              color:#718097;
+              font-size:10px;
+              font-weight:800;
+            ">
+              TOP 3
+            </div>
+
+            <div style="
+              font-size:24px;
+              font-weight:900;
+              margin-top:5px;
+            ">
+              ${esc(stats.top_three)}
+            </div>
+          </div>
+
+
+          <!-- PRIZE -->
+          <div style="
+            background:#0b0f17;
+            border:1px solid #202838;
+            border-radius:14px;
+            padding:14px;
+          ">
+            <div style="
+              color:#718097;
+              font-size:10px;
+              font-weight:800;
+            ">
+              PRIZE WON
+            </div>
+
+            <div style="
+              font-size:24px;
+              font-weight:900;
+              margin-top:5px;
+              color:#f0b44d;
+            ">
+              ৳${esc(stats.total_prize)}
+            </div>
           </div>
 
         </div>
 
 
-        <!-- UPCOMING -->
+        <!-- WIN RATE -->
         <div style="
-          background:#101521;
-          border:1px solid #263044;
-          border-radius:15px;
-          padding:15px;
+          margin-top:10px;
+          background:#0b0f17;
+          border:1px solid #202838;
+          border-radius:14px;
+          padding:14px;
         ">
 
           <div style="
@@ -3168,61 +3257,38 @@ async function showProfile() {
               font-size:10px;
               font-weight:800;
             ">
-              UPCOMING
+              WIN RATE
             </span>
-
-            <span style="font-size:17px;">
-              ⏳
-            </span>
-
-          </div>
-
-          <div style="
-            font-size:25px;
-            font-weight:900;
-            margin-top:6px;
-          ">
-            ${esc(upcomingCount)}
-          </div>
-
-        </div>
-
-
-        <!-- COMPLETED -->
-        <div style="
-          background:#101521;
-          border:1px solid #263044;
-          border-radius:15px;
-          padding:15px;
-        ">
-
-          <div style="
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-          ">
 
             <span style="
-              color:#718097;
-              font-size:10px;
-              font-weight:800;
+              font-size:18px;
+              font-weight:900;
+              color:#60a5fa;
             ">
-              COMPLETED
-            </span>
-
-            <span style="font-size:17px;">
-              🏆
+              ${esc(stats.win_rate)}%
             </span>
 
           </div>
 
+
           <div style="
-            font-size:25px;
-            font-weight:900;
-            margin-top:6px;
-            color:#60a5fa;
+            margin-top:9px;
+            height:7px;
+            background:#182131;
+            border-radius:999px;
+            overflow:hidden;
           ">
-            ${esc(completedCount)}
+
+            <div style="
+              width:${Math.min(
+                Math.max(Number(stats.win_rate) || 0, 0),
+                100
+              )}%;
+              height:100%;
+              background:#60a5fa;
+              border-radius:999px;
+            "></div>
+
           </div>
 
         </div>
