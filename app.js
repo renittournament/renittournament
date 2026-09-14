@@ -3870,7 +3870,7 @@ async function openAdmin() {
             font-size:10px;
             font-weight:800;
           ">
-            ADMIN
+            OWNER
           </div>
 
         </div>
@@ -4319,60 +4319,7 @@ async function openAdmin() {
         ></div>
 
       </div>
-      <!-- DEPOSIT REQUESTS -->
-      <div style="
-        background:#101521;
-        border:1px solid #263044;
-        border-radius:18px;
-        padding:17px;
-        margin-bottom:14px;
-      ">
-
-        <div style="
-          display:flex;
-          align-items:center;
-          gap:10px;
-          margin-bottom:13px;
-        ">
-
-          <div style="
-            width:40px;
-            height:40px;
-            border-radius:12px;
-            background:#182235;
-            border:1px solid #2c3b55;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            font-size:19px;
-          ">
-            💳
-          </div>
-
-          <div>
-            <div style="
-              font-size:18px;
-              font-weight:800;
-            ">
-              Deposit Requests
-            </div>
-
-            <div style="
-              color:#718097;
-              font-size:11px;
-              margin-top:2px;
-            ">
-              Review player payment requests
-            </div>
-          </div>
-
-        </div>
-
-        <div id="adminDepositRequests">
-          Loading...
-        </div>
-
-      </div>
+      
 
 
       <!-- ROOM INFORMATION -->
@@ -4796,6 +4743,61 @@ async function openAdmin() {
             font-size:12px;
           "
         ></div>
+
+      </div>
+
+      <!-- DEPOSIT REQUESTS -->
+      <div style="
+        background:#101521;
+        border:1px solid #263044;
+        border-radius:18px;
+        padding:17px;
+        margin-bottom:14px;
+      ">
+
+        <div style="
+          display:flex;
+          align-items:center;
+          gap:10px;
+          margin-bottom:13px;
+        ">
+
+          <div style="
+            width:40px;
+            height:40px;
+            border-radius:12px;
+            background:#182235;
+            border:1px solid #2c3b55;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:19px;
+          ">
+            💳
+          </div>
+
+          <div>
+            <div style="
+              font-size:18px;
+              font-weight:800;
+            ">
+              Deposit Requests
+            </div>
+
+            <div style="
+              color:#718097;
+              font-size:11px;
+              margin-top:2px;
+            ">
+              Review player payment requests
+            </div>
+          </div>
+
+        </div>
+
+        <div id="adminDepositRequests">
+          Loading...
+        </div>
 
       </div>
 
