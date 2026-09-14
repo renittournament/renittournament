@@ -541,43 +541,314 @@ function home() {
   }
 
   app.innerHTML = pageShell(`
-    <main style="padding:18px 16px 90px;">
+    <main style="
+      padding:18px 16px 100px;
+      max-width:700px;
+      margin:auto;
+    ">
+
+      <!-- Hero -->
       <div style="
-        background:linear-gradient(135deg,#151d2d,#0f1420);
-        border:1px solid #263044;
-        border-radius:16px;
-        padding:20px;
+        background:
+          radial-gradient(circle at top right, #25385f 0%, transparent 45%),
+          linear-gradient(135deg,#151d2d,#0d121c);
+        border:1px solid #2a3852;
+        border-radius:20px;
+        padding:22px;
+        margin-bottom:18px;
+        box-shadow:0 12px 30px rgba(0,0,0,.25);
       ">
-        <div style="color:#8f9bb0;font-size:13px;">WELCOME</div>
-        <h2 style="margin:7px 0;">
-          ${esc(currentProfile?.username || "Player")}
-        </h2>
-        <div style="color:#9ba6b8;font-size:13px;">
-          Ready for your next tournament?
+
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          align-items:flex-start;
+          gap:12px;
+        ">
+
+          <div>
+            <div style="
+              color:#7f8da6;
+              font-size:12px;
+              font-weight:700;
+              letter-spacing:1.5px;
+              margin-bottom:7px;
+            ">
+              WELCOME BACK
+            </div>
+
+            <div style="
+              font-size:25px;
+              font-weight:800;
+              line-height:1.2;
+            ">
+              ${esc(currentProfile?.username || "Player")}
+            </div>
+
+            <div style="
+              color:#9ba6b8;
+              font-size:13px;
+              margin-top:8px;
+            ">
+              Ready for your next victory?
+            </div>
+          </div>
+
+          <div style="
+            width:46px;
+            height:46px;
+            border-radius:50%;
+            background:#202b40;
+            border:1px solid #34435f;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:22px;
+            font-weight:800;
+          ">
+            ${esc(
+              String(currentProfile?.username || "P")
+                .charAt(0)
+                .toUpperCase()
+            )}
+          </div>
+
+        </div>
+
+        <div style="
+          display:grid;
+          grid-template-columns:1fr 1fr;
+          gap:10px;
+          margin-top:20px;
+        ">
+
+          <button onclick="openWallet()" style="
+            background:#111925;
+            color:white;
+            border:1px solid #29364d;
+            border-radius:13px;
+            padding:13px;
+            text-align:left;
+          ">
+            <div style="
+              color:#7f8da6;
+              font-size:11px;
+              margin-bottom:5px;
+            ">
+              WALLET BALANCE
+            </div>
+
+            <div style="
+              font-size:19px;
+              font-weight:800;
+            ">
+              ৳${Number(currentProfile?.balance || 0).toFixed(2)}
+            </div>
+          </button>
+
+          <button onclick="showLeaderboard()" style="
+            background:#111925;
+            color:white;
+            border:1px solid #29364d;
+            border-radius:13px;
+            padding:13px;
+            text-align:left;
+          ">
+            <div style="
+              color:#7f8da6;
+              font-size:11px;
+              margin-bottom:5px;
+            ">
+              COMPETITION
+            </div>
+
+            <div style="
+              font-size:16px;
+              font-weight:800;
+            ">
+              🏆 Ranking
+            </div>
+          </button>
+
         </div>
       </div>
 
-      <h3 style="margin-top:25px;">Game Categories</h3>
+
+      <!-- Quick Actions -->
+      <div style="
+        display:grid;
+        grid-template-columns:repeat(3,1fr);
+        gap:10px;
+        margin-bottom:24px;
+      ">
+
+        <button onclick="showMatches()" style="
+          background:#111722;
+          color:white;
+          border:1px solid #263044;
+          border-radius:14px;
+          padding:15px 7px;
+        ">
+          <div style="font-size:23px;">🎮</div>
+          <div style="
+            font-size:12px;
+            font-weight:700;
+            margin-top:7px;
+          ">
+            Matches
+          </div>
+        </button>
+
+        <button onclick="showResults()" style="
+          background:#111722;
+          color:white;
+          border:1px solid #263044;
+          border-radius:14px;
+          padding:15px 7px;
+        ">
+          <div style="font-size:23px;">🏆</div>
+          <div style="
+            font-size:12px;
+            font-weight:700;
+            margin-top:7px;
+          ">
+            Results
+          </div>
+        </button>
+
+        <button onclick="showNotifications()" style="
+          background:#111722;
+          color:white;
+          border:1px solid #263044;
+          border-radius:14px;
+          padding:15px 7px;
+        ">
+          <div style="font-size:23px;">🔔</div>
+          <div style="
+            font-size:12px;
+            font-weight:700;
+            margin-top:7px;
+          ">
+            Alerts
+          </div>
+        </button>
+
+      </div>
+
+
+      <!-- Game Categories -->
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        margin-bottom:12px;
+      ">
+
+        <div>
+          <div style="
+            font-size:20px;
+            font-weight:800;
+          ">
+            Game Categories
+          </div>
+
+          <div style="
+            color:#78859a;
+            font-size:12px;
+            margin-top:4px;
+          ">
+            Choose a game and find your match
+          </div>
+        </div>
+
+        <div style="
+          background:#171f2e;
+          border:1px solid #29364d;
+          border-radius:999px;
+          padding:6px 10px;
+          color:#9ba6b8;
+          font-size:11px;
+          font-weight:700;
+        ">
+          ${games.length} GAMES
+        </div>
+
+      </div>
+
 
       <div style="
         display:grid;
         grid-template-columns:1fr 1fr;
         gap:10px;
       ">
-        ${games.map(game => `
-          <button onclick="showGameMatches('${esc(game)}')" style="
-            background:#111722;
-            color:white;
-            border:1px solid #263044;
-            border-radius:12px;
-            padding:17px 8px;
-            min-height:70px;
-            font-weight:700;
-          ">
-            ${esc(game)}
+
+        ${games.map((game, index) => `
+          <button
+            onclick="showGameMatches('${esc(game)}')"
+            style="
+              position:relative;
+              overflow:hidden;
+              background:
+                linear-gradient(
+                  145deg,
+                  #141c2b,
+                  #0e131d
+                );
+              color:white;
+              border:1px solid #263044;
+              border-radius:15px;
+              padding:16px 13px;
+              min-height:82px;
+              text-align:left;
+              transition:.2s;
+            "
+          >
+
+            <div style="
+              display:flex;
+              align-items:center;
+              justify-content:space-between;
+              gap:8px;
+            ">
+
+              <div style="
+                width:34px;
+                height:34px;
+                border-radius:10px;
+                background:#1d2739;
+                border:1px solid #303d55;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-size:17px;
+              ">
+                ${index === 0 ? "🔥" : "🎯"}
+              </div>
+
+              <div style="
+                color:#526078;
+                font-size:11px;
+                font-weight:700;
+              ">
+                #${String(index + 1).padStart(2, "0")}
+              </div>
+
+            </div>
+
+            <div style="
+              margin-top:11px;
+              font-size:13px;
+              font-weight:800;
+              line-height:1.3;
+            ">
+              ${esc(game)}
+            </div>
+
           </button>
         `).join("")}
+
       </div>
+
     </main>
   `);
 }
