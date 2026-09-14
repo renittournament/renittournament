@@ -5039,6 +5039,51 @@ async function openAdmin() {
 
       </div>
 
+      <!-- WITHDRAWAL REQUESTS -->
+<section style="
+  margin-top:18px;
+  background:#111827;
+  border:1px solid #263247;
+  border-radius:16px;
+  padding:16px;
+">
+
+  <div style="
+    display:flex;
+    align-items:center;
+    gap:9px;
+    margin-bottom:13px;
+  ">
+
+    <div style="font-size:19px;">
+      💸
+    </div>
+
+    <div>
+      <div style="
+        font-size:17px;
+        font-weight:800;
+      ">
+        Withdrawal Requests
+      </div>
+
+      <div style="
+        color:#718097;
+        font-size:11px;
+        margin-top:2px;
+      ">
+        Manage player withdrawal requests
+      </div>
+    </div>
+
+  </div>
+
+  <div id="adminWithdrawalRequests">
+    Loading...
+  </div>
+
+</section>
+
     </main>
   `);
 
@@ -5048,7 +5093,102 @@ async function openAdmin() {
   await loadStatusTournaments();
   await loadEditTournaments();
   await loadPlayersTournamentList();
+  await loadAdminWithdrawalRequests();
 }
+async function loadAdminWithdrawalRequests() {
+  const box =
+    document.getElementById("adminWithdrawalRequests");
+
+  if (!box) return;
+
+  box.innerHTML = "Loading withdrawal requests...";
+
+  const { data, error } = await db.rpc(
+    "get_admin_withdrawal_requests"
+  );
+
+  if (error) {
+    console.log(error);
+
+    box.innerHTML =
+      "Withdrawal requests load করা যায়নি: " +
+      esc(error.message);
+
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    box.innerHTML = `
+      <div style="
+        padding:10px;
+        background:#0f172a;
+        border-radius:8px;
+        color:#94a3b8;
+        font-size:13px;
+      ">
+        No withdrawal requests yet.
+      </div>
+    `;
+
+    return;
+  }
+
+  box.innerHTML = data.map(request => `
+    <div style="
+      background:#0f172a;
+      border:1px solid #263247;
+      border-radius:10px;
+      padding:11px;
+      margin-bottom:7px;
+    ">
+
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        gap:8px;
+        margin-bottom:7px;
+      ">
+
+        <div style="
+          font-size:13px;
+          font-weight:800;
+          color:white;
+        ">
+          👤 ${esc(request.username || "Unknown")}
+        </div>
+
+        <div style="
+          font-size:12px;
+          font-weight:800;
+          color:#fbbf24;
+        ">
+          ৳${esc(request.amount)}
+        </div>
+
+      </div>
+
+      <div style="
+        color:#cbd5e1;
+        font-size:12px;
+        line-height:1.6;
+      ">
+        📧 ${esc(request.email || "No email")}<br>
+        💳 ${esc(request.method)}<br>
+        📱 ${esc(request.mobile_number)}
+      </div>
+
+      <div style="
+        margin-top:7px;
+        color:#94a3b8;
+        font-size:11px;
+      ">
+        Status: ${esc(request.status)}
+      </div>
+
+    </div>
+  `).join("");
+}
+
 async function loadAdminTournamentPlayers() {
   const select = document.getElementById("playersTournamentId");
   const box = document.getElementById("adminTournamentPlayers");
