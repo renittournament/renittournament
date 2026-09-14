@@ -4716,76 +4716,68 @@ async function loadAdminTournamentPlayers() {
 
   if (error) {
     console.log(error);
-
-    box.innerHTML = `
-      <div style="
-        padding:14px;
-        background:#0f172a;
-        border-radius:12px;
-        color:#f87171;
-      ">
-        Players load করা যায়নি: ${esc(error.message)}
-      </div>
-    `;
-
+    box.innerHTML =
+      "Players load করা যায়নি: " + esc(error.message);
     return;
   }
 
   if (!data || data.length === 0) {
     box.innerHTML = `
       <div style="
-        padding:14px;
+        padding:10px;
         background:#0f172a;
-        border-radius:12px;
+        border-radius:8px;
         color:#94a3b8;
+        font-size:13px;
       ">
         No players joined this tournament yet.
       </div>
     `;
-
     return;
   }
 
   box.innerHTML = `
     <div style="
-      margin-bottom:14px;
+      margin-bottom:8px;
       color:#94a3b8;
-      font-size:14px;
+      font-size:12px;
     ">
-      👥 Registered Players: ${data.length}
+      👥 Registered: ${data.length}
     </div>
 
     ${data.map((player, index) => `
       <div style="
         background:#0f172a;
         border:1px solid #263247;
-        border-radius:14px;
-        padding:15px;
-        margin-bottom:10px;
+        border-radius:9px;
+        padding:9px 10px;
+        margin-bottom:6px;
       ">
 
         <div style="
           display:flex;
           align-items:center;
-          gap:10px;
-          margin-bottom:12px;
+          gap:8px;
+          margin-bottom:6px;
         ">
 
           <div style="
-            width:34px;
-            height:34px;
+            width:24px;
+            height:24px;
             border-radius:50%;
             background:#1e293b;
             display:flex;
             align-items:center;
             justify-content:center;
+            font-size:11px;
             font-weight:700;
-            color:white;
+            flex-shrink:0;
           ">
             ${index + 1}
           </div>
 
           <div style="
+            font-size:12px;
             font-weight:700;
             color:white;
           ">
@@ -4795,71 +4787,36 @@ async function loadAdminTournamentPlayers() {
         </div>
 
         <div style="
-          padding:10px 12px;
-          background:#111827;
-          border-radius:9px;
-          margin-bottom:7px;
+          display:grid;
+          grid-template-columns:1fr;
+          gap:3px;
+          font-size:12px;
         ">
-          <div style="
-            font-size:12px;
-            color:#64748b;
-            margin-bottom:3px;
-          ">
-            🎮 Game ID Name
-          </div>
 
           <div style="
-            color:white;
-            font-weight:700;
+            color:#cbd5e1;
             word-break:break-word;
           ">
+            🎮 <b>Game:</b>
             ${esc(player.game_name || "Not provided")}
-          </div>
-        </div>
-
-        <div style="
-          padding:10px 12px;
-          background:#111827;
-          border-radius:9px;
-          margin-bottom:7px;
-        ">
-          <div style="
-            font-size:12px;
-            color:#64748b;
-            margin-bottom:3px;
-          ">
-            👤 Username
-          </div>
-
-          <div style="
-            color:white;
-            font-weight:700;
-            word-break:break-word;
-          ">
-            ${esc(player.username || "Unknown")}
-          </div>
-        </div>
-
-        <div style="
-          padding:10px 12px;
-          background:#111827;
-          border-radius:9px;
-        ">
-          <div style="
-            font-size:12px;
-            color:#64748b;
-            margin-bottom:3px;
-          ">
-            📧 Email
           </div>
 
           <div style="
             color:#cbd5e1;
-            font-size:14px;
+            word-break:break-word;
+          ">
+            👤 <b>User:</b>
+            ${esc(player.username || "Unknown")}
+          </div>
+
+          <div style="
+            color:#94a3b8;
             word-break:break-all;
           ">
+            📧 <b>Email:</b>
             ${esc(player.email || "No email")}
           </div>
+
         </div>
 
       </div>
