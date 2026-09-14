@@ -1408,6 +1408,17 @@ async function openMatch(id) {
   const prize = tournamentPrize(data);
   const slots = tournamentSlots(data);
 
+  const status =
+    String(data.status || "upcoming").toLowerCase();
+
+  let statusText = "🟢 UPCOMING";
+
+  if (status === "live") {
+    statusText = "🔴 LIVE NOW";
+  } else if (status === "completed") {
+    statusText = "✅ COMPLETED";
+  }
+
   let room = null;
 
   if (currentUser) {
@@ -1425,68 +1436,358 @@ async function openMatch(id) {
   }
 
   app.innerHTML = pageShell(`
-    <main style="padding:18px 16px 90px;">
+    <main style="
+      padding:18px 16px 100px;
+      max-width:700px;
+      margin:auto;
+    ">
+
+      <!-- Back -->
       <button onclick="showMatches()" style="
         background:none;
         border:0;
         color:#9ba6b8;
         padding:0;
-        margin-bottom:15px;
-      ">← Back</button>
+        margin-bottom:16px;
+        font-size:15px;
+      ">
+        ← Back to Matches
+      </button>
 
+
+      <!-- Tournament Header -->
+      <div style="
+        background:
+          radial-gradient(
+            circle at top right,
+            #263b60 0%,
+            transparent 48%
+          ),
+          linear-gradient(145deg,#151e2d,#0d121b);
+        border:1px solid #2b3b55;
+        border-radius:20px;
+        padding:20px;
+        margin-bottom:14px;
+        box-shadow:0 12px 30px rgba(0,0,0,.25);
+      ">
+
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          gap:10px;
+        ">
+
+          <div style="
+            color:#8f9bb0;
+            font-size:12px;
+            font-weight:700;
+          ">
+            🎮 ${esc(game)}
+          </div>
+
+          <div style="
+            background:#182438;
+            border:1px solid #30415d;
+            border-radius:999px;
+            padding:7px 10px;
+            font-size:10px;
+            font-weight:800;
+            white-space:nowrap;
+          ">
+            ${statusText}
+          </div>
+
+        </div>
+
+
+        <h2 style="
+          margin:12px 0 7px;
+          font-size:25px;
+          line-height:1.25;
+        ">
+          ${esc(title)}
+        </h2>
+
+        <div style="
+          color:#78869c;
+          font-size:12px;
+        ">
+          Tournament Details
+        </div>
+
+      </div>
+
+
+      <!-- Prize & Entry -->
+      <div style="
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:10px;
+        margin-bottom:14px;
+      ">
+
+        <div style="
+          background:#111722;
+          border:1px solid #263044;
+          border-radius:15px;
+          padding:15px;
+        ">
+          <div style="
+            color:#718097;
+            font-size:10px;
+            font-weight:700;
+          ">
+            ENTRY FEE
+          </div>
+
+          <div style="
+            font-size:21px;
+            font-weight:800;
+            margin-top:5px;
+          ">
+            ৳${esc(fee)}
+          </div>
+        </div>
+
+        <div style="
+          background:#111722;
+          border:1px solid #263044;
+          border-radius:15px;
+          padding:15px;
+        ">
+          <div style="
+            color:#718097;
+            font-size:10px;
+            font-weight:700;
+          ">
+            PRIZE POOL
+          </div>
+
+          <div style="
+            font-size:21px;
+            font-weight:800;
+            margin-top:5px;
+          ">
+            ৳${esc(prize)}
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- Tournament Info -->
       <div style="
         background:#101521;
         border:1px solid #202838;
         border-radius:16px;
-        padding:20px;
+        padding:16px;
+        margin-bottom:14px;
       ">
-        <div style="color:#8f9bb0;font-size:12px;">
-          ${esc(game)}
+
+        <div style="
+          font-size:17px;
+          font-weight:800;
+          margin-bottom:14px;
+        ">
+          📋 Tournament Information
         </div>
 
-        <h2>${esc(title)}</h2>
+        <div style="
+          display:grid;
+          grid-template-columns:1fr 1fr;
+          gap:12px;
+        ">
 
-        <p>Entry Fee: <b>৳${esc(fee)}</b></p>
-        <p>Prize Pool: <b>৳${esc(prize)}</b></p>
-        <p>Slots: <b>${esc(slots)}</b></p>
-
-        ${room ? `
-          <div style="
-            margin-top:20px;
-            padding:16px;
-            background:#151d2d;
-            border:1px solid #2c3952;
-            border-radius:14px;
-          ">
+          <div>
             <div style="
-              color:#8f9bb0;
-              font-size:12px;
-              margin-bottom:10px;
+              color:#718097;
+              font-size:10px;
             ">
-              ROOM INFORMATION
+              GAME
             </div>
 
-            <div style="margin-bottom:10px;">
-              <span style="color:#8f9bb0;">Room ID</span><br>
-              <b style="font-size:18px;">
-                ${esc(room.room_id || "Not published")}
-              </b>
-            </div>
-
-            <div>
-              <span style="color:#8f9bb0;">Password</span><br>
-              <b style="font-size:18px;">
-                ${esc(room.room_password || "Not published")}
-              </b>
+            <div style="
+              margin-top:4px;
+              font-size:13px;
+              font-weight:700;
+            ">
+              ${esc(game)}
             </div>
           </div>
-        ` : ""}
 
-        ${primaryBtn(
-          "Join Tournament",
-          `joinTournament('${esc(data.id)}')`
-        )}
+
+          <div>
+            <div style="
+              color:#718097;
+              font-size:10px;
+            ">
+              MODE
+            </div>
+
+            <div style="
+              margin-top:4px;
+              font-size:13px;
+              font-weight:700;
+            ">
+              ${esc(data.mode || "Solo")}
+            </div>
+          </div>
+
+
+          <div>
+            <div style="
+              color:#718097;
+              font-size:10px;
+            ">
+              MAX PLAYERS
+            </div>
+
+            <div style="
+              margin-top:4px;
+              font-size:13px;
+              font-weight:700;
+            ">
+              ${esc(slots)}
+            </div>
+          </div>
+
+
+          <div>
+            <div style="
+              color:#718097;
+              font-size:10px;
+            ">
+              START TIME
+            </div>
+
+            <div style="
+              margin-top:4px;
+              font-size:13px;
+              font-weight:700;
+            ">
+              ${esc(tournamentStartTime(data))}
+            </div>
+          </div>
+
+        </div>
+
       </div>
+
+
+      <!-- Rules -->
+      <div style="
+        background:#101521;
+        border:1px solid #202838;
+        border-radius:16px;
+        padding:16px;
+        margin-bottom:14px;
+      ">
+
+        <div style="
+          font-size:17px;
+          font-weight:800;
+          margin-bottom:10px;
+        ">
+          📜 Tournament Rules
+        </div>
+
+        <div style="
+          color:#9ba6b8;
+          font-size:13px;
+          line-height:1.7;
+        ">
+          • Join the tournament before the start time.<br>
+          • Make sure your game account is ready.<br>
+          • Room information will be available to joined players.<br>
+          • Follow the tournament instructions provided by the admin.<br>
+          • Any rule violation may result in disqualification.
+        </div>
+
+      </div>
+
+
+      <!-- Room Information -->
+      ${room ? `
+        <div style="
+          background:
+            linear-gradient(145deg,#142238,#0f1724);
+          border:1px solid #31527d;
+          border-radius:16px;
+          padding:17px;
+          margin-bottom:14px;
+        ">
+
+          <div style="
+            color:#60a5fa;
+            font-size:12px;
+            font-weight:800;
+            margin-bottom:13px;
+          ">
+            🔑 ROOM INFORMATION
+          </div>
+
+
+          <div style="
+            background:#0b111b;
+            border:1px solid #26364e;
+            border-radius:12px;
+            padding:12px;
+            margin-bottom:9px;
+          ">
+            <div style="
+              color:#718097;
+              font-size:10px;
+              margin-bottom:4px;
+            ">
+              ROOM ID
+            </div>
+
+            <div style="
+              font-size:18px;
+              font-weight:800;
+              letter-spacing:.5px;
+            ">
+              ${esc(room.room_id || "Not published")}
+            </div>
+          </div>
+
+
+          <div style="
+            background:#0b111b;
+            border:1px solid #26364e;
+            border-radius:12px;
+            padding:12px;
+          ">
+            <div style="
+              color:#718097;
+              font-size:10px;
+              margin-bottom:4px;
+            ">
+              PASSWORD
+            </div>
+
+            <div style="
+              font-size:18px;
+              font-weight:800;
+              letter-spacing:.5px;
+            ">
+              ${esc(room.room_password || "Not published")}
+            </div>
+          </div>
+
+        </div>
+      ` : ""}
+
+
+      <!-- Join -->
+      ${primaryBtn(
+        status === "completed"
+          ? "Tournament Completed"
+          : "Join Tournament",
+        `joinTournament('${esc(data.id)}')`
+      )}
+
     </main>
   `);
 }
