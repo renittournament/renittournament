@@ -3487,6 +3487,40 @@ async function showProfile() {
       }
 
 
+      <!-- EDIT PROFILE -->
+<div style="
+  margin-top:14px;
+  background:#101521;
+  border:1px solid #263044;
+  border-radius:17px;
+  padding:17px;
+">
+  <div style="
+    color:#718097;
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:.8px;
+    margin-bottom:10px;
+  ">
+    ACCOUNT SETTINGS
+  </div>
+
+  <button
+    onclick="openEditProfile()"
+    style="
+      width:100%;
+      padding:14px;
+      background:#161d2b;
+      color:#ffffff;
+      border:1px solid #303b50;
+      border-radius:12px;
+      font-weight:800;
+      font-size:14px;
+    "
+  >
+    ✏️ Edit Profile
+  </button>
+</div>
       <!-- LOGOUT -->
       <button onclick="logout()" style="
         width:100%;
@@ -3505,7 +3539,49 @@ async function showProfile() {
     </main>
   `);
 }
+async function updateMyProfile(username) {
+  const { data, error } = await db.rpc(
+    "update_my_profile",
+    {
+      p_username: username
+    }
+  );
 
+  if (error) {
+    console.log(error);
+    alert("Profile update করা যায়নি: " + error.message);
+    return;
+  }
+
+  if (currentProfile) {
+    currentProfile.username = data.username;
+  }
+
+  alert("Profile successfully updated!");
+
+  await showProfile();
+}
+function openEditProfile() {
+  const username =
+    currentProfile?.username || "";
+
+  const newUsername =
+    prompt("নতুন Username দিন:", username);
+
+  if (newUsername === null) {
+    return;
+  }
+
+  const trimmedUsername =
+    newUsername.trim();
+
+  if (!trimmedUsername) {
+    alert("Username দিন।");
+    return;
+  }
+
+  updateMyProfile(trimmedUsername);
+}
 async function logout() {
   await db.auth.signOut();
   currentUser = null;
