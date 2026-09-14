@@ -4477,6 +4477,38 @@ async function openAdmin() {
       </div>
 
 
+      <!-- TOURNAMENT PLAYERS -->
+<section style="
+  margin-top:18px;
+  background:#111827;
+  border:1px solid #263247;
+  border-radius:16px;
+  padding:16px;
+">
+  <h3 style="margin:0 0 12px;">👥 Tournament Players</h3>
+
+  <select
+    id="playersTournamentId"
+    onchange="loadAdminTournamentPlayers()"
+    style="
+      width:100%;
+      padding:12px;
+      border-radius:10px;
+      border:1px solid #334155;
+      background:#0f172a;
+      color:white;
+    "
+  >
+    <option value="">Select Tournament</option>
+  </select>
+
+  <div
+    id="adminTournamentPlayers"
+    style="margin-top:14px;"
+  >
+    Select a tournament to view players.
+  </div>
+</section>
       <!-- TOURNAMENT RESULTS -->
       <div style="
         background:#101521;
@@ -4638,6 +4670,124 @@ async function openAdmin() {
   await loadResultTournaments();
   await loadStatusTournaments();
   await loadEditTournaments();
+  await loadPlayersTournamentList();
+}
+async function loadAdminTournamentPlayers() {
+  const select = document.getElementById("playersTournamentId");
+  const box = document.getElementById("adminTournamentPlayers");
+
+  if (!select || !box) return;
+
+  const tournamentId = select.value;
+
+  if (!tournamentId) {
+    box.innerHTML = "Select a tournament to view players.";
+    return;
+  }
+
+  box.innerHTML = "Loading players...";
+
+  const { data, error } = await db.rpc(
+    "get_admin_tournament_players",
+    {
+      p_tournament_id: Number(tournamentId)
+    }
+  );
+
+  if (error) {
+    console.log(error);
+    box.innerHTML =
+      "Players load করা যায়নি: " + error.message;
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    box.innerHTML = `
+      <div style="
+        padding:14px;
+        background:#0f172a;
+        border-radius:10px;
+        color:#94a3b8;
+      ">
+        No players joined this tournament yet.
+      </div>
+    `;
+    return;
+  }
+
+  box.innerHTML = `
+    <div style="
+      color:#94a3b8;
+      margin-bottom:10px;
+      font-size:14px;
+    ">
+      Total Players: ${data.length}
+    </div>
+
+    ${data.map((player, index) => `
+      <div style="
+        display:flex;
+        align-items:center;
+        gap:12px;
+        padding:12px;
+        margin-bottom:8px;
+        background:#0f172a;
+        border:1px solid #263247;
+        border-radius:10px;
+      ">
+        <div style="
+          width:32px;
+          height:32px;
+          border-radius:50%;
+          background:#1e293b;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          font-weight:700;
+        ">
+          ${index + 1}
+        </div>
+
+        <div style="min-width:0;">
+          <div style="font-weight:700;">
+            ${esc(player.username || "Unknown")}
+          </div>
+
+          <div style="
+            color:#94a3b8;
+            font-size:13px;
+            word-break:break-all;
+          ">
+            ${esc(player.email || "")}
+          </div>
+        </div>
+      </div>
+    `).join("")}
+  `;
+}
+async function loadPlayersTournamentList() {
+  const select = document.getElementById("playersTournamentId");
+
+  if (!select) return;
+
+  const { data, error } = await db
+    .from("tournaments")
+    .select("id, title")
+    .order("id", { ascending: false });
+
+  if (error) {
+    console.log(error);
+    return;
+  }
+
+  select.innerHTML = `
+    <option value="">Select Tournament</option>
+    ${(data || []).map(t => `
+      <option value="${t.id}">
+        ${esc(t.title || "Tournament #" + t.id)}
+      </option>
+    `).join("")}
+  `;
 }
 async function loadEditTournaments() {
   const select =
