@@ -2589,7 +2589,7 @@ async function openWallet() {
   await loadTransactionHistory();
 }
 
-async function showProfile() {
+aasync function showProfile() {
   currentProfile = await loadProfile();
 
   const { data: myTournaments, error: myTournamentsError } =
@@ -2629,90 +2629,164 @@ async function showProfile() {
   const firstLetter =
     String(username).charAt(0).toUpperCase();
 
+  const admin = await isAdmin();
+
   app.innerHTML = pageShell(`
-    <main style="padding:18px 16px 90px;">
+    <main style="
+      padding:18px 16px 100px;
+      max-width:700px;
+      margin:auto;
+    ">
 
-      <h2 style="margin-bottom:15px;">
-        Profile
-      </h2>
-
-      <!-- PROFILE HEADER -->
+      <!-- HEADER -->
       <div style="
-        background:linear-gradient(
-          135deg,
-          #151d2d,
-          #0d121c
-        );
-        border:1px solid #293346;
-        border-radius:18px;
+        margin-bottom:16px;
+      ">
+        <div style="
+          color:#718097;
+          font-size:11px;
+          font-weight:800;
+          letter-spacing:1.4px;
+          margin-bottom:5px;
+        ">
+          RENIT ACCOUNT
+        </div>
+
+        <h2 style="
+          margin:0;
+          font-size:25px;
+        ">
+          👤 Profile
+        </h2>
+      </div>
+
+
+      <!-- PROFILE CARD -->
+      <div style="
+        background:
+          radial-gradient(
+            circle at top right,
+            #29446c 0%,
+            transparent 48%
+          ),
+          linear-gradient(145deg,#17243a,#0d141f);
+        border:1px solid #304666;
+        border-radius:20px;
         padding:20px;
+        box-shadow:0 12px 30px rgba(0,0,0,.25);
       ">
 
         <div style="
-          width:64px;
-          height:64px;
-          border-radius:50%;
-          background:#e94560;
           display:flex;
           align-items:center;
-          justify-content:center;
-          font-size:28px;
-          font-weight:900;
-          margin-bottom:14px;
+          gap:14px;
         ">
-          ${esc(firstLetter)}
-        </div>
 
-        <div style="
-          color:#8f9bb0;
-          font-size:11px;
-          letter-spacing:1px;
-        ">
-          PLAYER
-        </div>
+          <div style="
+            width:64px;
+            height:64px;
+            min-width:64px;
+            border-radius:18px;
+            background:#e94560;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:27px;
+            font-weight:900;
+            box-shadow:0 8px 20px rgba(233,69,96,.25);
+          ">
+            ${esc(firstLetter)}
+          </div>
 
-        <div style="
-          font-size:23px;
-          font-weight:800;
-          margin-top:5px;
-        ">
-          ${esc(username)}
-        </div>
+          <div style="
+            min-width:0;
+          ">
 
-        <div style="
-          color:#9ba6b8;
-          font-size:13px;
-          margin-top:7px;
-          word-break:break-all;
-        ">
-          ${esc(email)}
+            <div style="
+              color:#718097;
+              font-size:10px;
+              font-weight:800;
+              letter-spacing:1px;
+              margin-bottom:4px;
+            ">
+              PLAYER
+            </div>
+
+            <div style="
+              font-size:22px;
+              font-weight:900;
+              word-break:break-word;
+            ">
+              ${esc(username)}
+            </div>
+
+            <div style="
+              color:#91a0b5;
+              font-size:12px;
+              margin-top:5px;
+              word-break:break-all;
+            ">
+              ${esc(email)}
+            </div>
+
+          </div>
+
         </div>
 
       </div>
 
 
-      <!-- BALANCE -->
+      <!-- WALLET -->
       <div style="
         margin-top:14px;
         background:#101521;
-        border:1px solid #202838;
-        border-radius:16px;
-        padding:18px;
+        border:1px solid #263044;
+        border-radius:17px;
+        padding:17px;
       ">
 
         <div style="
-          color:#8f9bb0;
-          font-size:12px;
+          display:flex;
+          justify-content:space-between;
+          align-items:flex-start;
+          gap:12px;
         ">
-          WALLET BALANCE
-        </div>
 
-        <div style="
-          font-size:30px;
-          font-weight:800;
-          margin-top:6px;
-        ">
-          ৳${esc(balance)}
+          <div>
+
+            <div style="
+              color:#718097;
+              font-size:10px;
+              font-weight:800;
+              letter-spacing:.8px;
+            ">
+              WALLET BALANCE
+            </div>
+
+            <div style="
+              font-size:30px;
+              font-weight:900;
+              margin-top:5px;
+            ">
+              ৳${esc(balance)}
+            </div>
+
+          </div>
+
+          <div style="
+            width:40px;
+            height:40px;
+            border-radius:12px;
+            background:#182235;
+            border:1px solid #2c3b55;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:19px;
+          ">
+            💰
+          </div>
+
         </div>
 
         ${primaryBtn(
@@ -2723,7 +2797,7 @@ async function showProfile() {
       </div>
 
 
-      <!-- PLAYER STATS -->
+      <!-- STATS -->
       <div style="
         margin-top:14px;
         display:grid;
@@ -2731,97 +2805,161 @@ async function showProfile() {
         gap:10px;
       ">
 
+        <!-- JOINED -->
         <div style="
           background:#101521;
-          border:1px solid #202838;
-          border-radius:14px;
+          border:1px solid #263044;
+          border-radius:15px;
           padding:15px;
         ">
+
           <div style="
-            color:#8f9bb0;
-            font-size:12px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
           ">
-            JOINED
+
+            <span style="
+              color:#718097;
+              font-size:10px;
+              font-weight:800;
+            ">
+              JOINED
+            </span>
+
+            <span style="font-size:17px;">
+              🎮
+            </span>
+
           </div>
 
           <div style="
-            font-size:24px;
-            font-weight:800;
-            margin-top:5px;
+            font-size:25px;
+            font-weight:900;
+            margin-top:6px;
           ">
             ${esc(totalJoined)}
           </div>
+
         </div>
 
 
+        <!-- LIVE -->
         <div style="
           background:#101521;
-          border:1px solid #202838;
-          border-radius:14px;
+          border:1px solid #263044;
+          border-radius:15px;
           padding:15px;
         ">
+
           <div style="
-            color:#8f9bb0;
-            font-size:12px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
           ">
-            LIVE
+
+            <span style="
+              color:#718097;
+              font-size:10px;
+              font-weight:800;
+            ">
+              LIVE
+            </span>
+
+            <span style="font-size:17px;">
+              🔴
+            </span>
+
           </div>
 
           <div style="
-            font-size:24px;
-            font-weight:800;
-            margin-top:5px;
+            font-size:25px;
+            font-weight:900;
+            margin-top:6px;
             color:#4ade80;
           ">
             ${esc(liveCount)}
           </div>
+
         </div>
 
 
+        <!-- UPCOMING -->
         <div style="
           background:#101521;
-          border:1px solid #202838;
-          border-radius:14px;
+          border:1px solid #263044;
+          border-radius:15px;
           padding:15px;
         ">
+
           <div style="
-            color:#8f9bb0;
-            font-size:12px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
           ">
-            UPCOMING
+
+            <span style="
+              color:#718097;
+              font-size:10px;
+              font-weight:800;
+            ">
+              UPCOMING
+            </span>
+
+            <span style="font-size:17px;">
+              ⏳
+            </span>
+
           </div>
 
           <div style="
-            font-size:24px;
-            font-weight:800;
-            margin-top:5px;
+            font-size:25px;
+            font-weight:900;
+            margin-top:6px;
           ">
             ${esc(upcomingCount)}
           </div>
+
         </div>
 
 
+        <!-- COMPLETED -->
         <div style="
           background:#101521;
-          border:1px solid #202838;
-          border-radius:14px;
+          border:1px solid #263044;
+          border-radius:15px;
           padding:15px;
         ">
+
           <div style="
-            color:#8f9bb0;
-            font-size:12px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
           ">
-            COMPLETED
+
+            <span style="
+              color:#718097;
+              font-size:10px;
+              font-weight:800;
+            ">
+              COMPLETED
+            </span>
+
+            <span style="font-size:17px;">
+              🏆
+            </span>
+
           </div>
 
           <div style="
-            font-size:24px;
-            font-weight:800;
-            margin-top:5px;
+            font-size:25px;
+            font-weight:900;
+            margin-top:6px;
             color:#60a5fa;
           ">
             ${esc(completedCount)}
           </div>
+
         </div>
 
       </div>
@@ -2831,17 +2969,43 @@ async function showProfile() {
       <div style="
         margin-top:15px;
         background:#101521;
-        border:1px solid #202838;
-        border-radius:16px;
-        padding:18px;
+        border:1px solid #263044;
+        border-radius:17px;
+        padding:17px;
       ">
 
-        <h3 style="
-          margin-top:0;
-          margin-bottom:10px;
+        <div style="
+          display:flex;
+          align-items:center;
+          gap:9px;
+          margin-bottom:13px;
         ">
-          My Tournaments
-        </h3>
+
+          <div style="font-size:19px;">
+            🏆
+          </div>
+
+          <div>
+
+            <div style="
+              font-size:17px;
+              font-weight:800;
+            ">
+              My Tournaments
+            </div>
+
+            <div style="
+              color:#718097;
+              font-size:11px;
+              margin-top:2px;
+            ">
+              Your joined tournaments
+            </div>
+
+          </div>
+
+        </div>
+
 
         ${
           tournaments.length
@@ -2852,63 +3016,91 @@ async function showProfile() {
                     .toLowerCase();
 
                 let statusColor = "#f0b44d";
+                let statusIcon = "⏳";
 
                 if (status === "live") {
                   statusColor = "#4ade80";
+                  statusIcon = "🔴";
                 }
 
                 if (status === "completed") {
                   statusColor = "#60a5fa";
+                  statusIcon = "🏆";
                 }
 
                 return `
                   <div style="
-                    background:#0b0f17;
-                    border:1px solid #202838;
-                    border-radius:13px;
+                    background:#0c121d;
+                    border:1px solid #202c40;
+                    border-radius:14px;
                     padding:15px;
                     margin-top:10px;
                   ">
 
                     <div style="
-                      font-size:17px;
-                      font-weight:700;
+                      display:flex;
+                      justify-content:space-between;
+                      align-items:flex-start;
+                      gap:10px;
                     ">
-                      ${esc(
-                        t.tournament_title ||
-                        "Tournament"
-                      )}
+
+                      <div style="
+                        min-width:0;
+                      ">
+
+                        <div style="
+                          font-size:16px;
+                          font-weight:800;
+                          word-break:break-word;
+                        ">
+                          ${esc(
+                            t.tournament_title ||
+                            "Tournament"
+                          )}
+                        </div>
+
+                        <div style="
+                          color:#718097;
+                          font-size:12px;
+                          margin-top:5px;
+                        ">
+                          ${esc(t.game || "-")}
+                        </div>
+
+                      </div>
+
+                      <div style="
+                        color:${statusColor};
+                        font-size:11px;
+                        font-weight:800;
+                        white-space:nowrap;
+                      ">
+                        ${statusIcon} ${esc(status)}
+                      </div>
+
                     </div>
 
-                    <div style="
-                      color:#9ba6b8;
-                      font-size:13px;
-                      margin-top:6px;
-                    ">
-                      ${esc(t.game || "-")}
-                    </div>
 
                     <div style="
                       display:flex;
                       justify-content:space-between;
-                      align-items:center;
-                      margin-top:12px;
+                      gap:10px;
+                      margin-top:13px;
+                      padding-top:11px;
+                      border-top:1px solid #1c2636;
+                      color:#91a0b5;
+                      font-size:11px;
                     ">
 
-                      <span style="
-                        color:#9ba6b8;
-                        font-size:12px;
-                      ">
-                        Entry: ৳${esc(t.entry_fee ?? 0)}
+                      <span>
+                        Entry ৳${esc(t.entry_fee ?? 0)}
                       </span>
 
-                      <span style="
-                        color:${statusColor};
-                        font-size:12px;
-                        font-weight:700;
-                        text-transform:uppercase;
-                      ">
-                        ${esc(status)}
+                      <span>
+                        ${esc(
+                          t.mode ||
+                          "Solo"
+                        )}
                       </span>
 
                     </div>
@@ -2918,11 +3110,28 @@ async function showProfile() {
               }).join("")
             : `
               <div style="
-                color:#8f9bb0;
-                padding:12px 0;
+                background:#0c121d;
+                border:1px dashed #28364b;
+                border-radius:14px;
+                padding:20px 14px;
                 text-align:center;
               ">
-                আপনি এখনো কোনো tournament-এ join করেননি।
+
+                <div style="
+                  font-size:25px;
+                  margin-bottom:7px;
+                ">
+                  🎮
+                </div>
+
+                <div style="
+                  color:#9ba6b8;
+                  font-size:13px;
+                ">
+                  আপনি এখনো কোনো tournament-এ
+                  join করেননি।
+                </div>
+
               </div>
             `
         }
@@ -2932,11 +3141,17 @@ async function showProfile() {
 
       <!-- ADMIN -->
       ${
-        await isAdmin()
-          ? primaryBtn(
-              "Admin Panel",
-              "openAdmin()"
-            )
+        admin
+          ? `
+            <div style="
+              margin-top:15px;
+            ">
+              ${primaryBtn(
+                "⚙️ Admin Panel",
+                "openAdmin()"
+              )}
+            </div>
+          `
           : ""
       }
 
@@ -2945,14 +3160,15 @@ async function showProfile() {
       <button onclick="logout()" style="
         width:100%;
         margin-top:12px;
-        padding:13px;
-        background:#171e2b;
+        padding:14px;
+        background:#111722;
         color:#ff6178;
-        border:1px solid #303a4d;
-        border-radius:10px;
-        font-weight:700;
+        border:1px solid #303b50;
+        border-radius:12px;
+        font-weight:800;
+        font-size:14px;
       ">
-        Logout
+        🚪 Logout
       </button>
 
     </main>
