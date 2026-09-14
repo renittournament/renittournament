@@ -973,32 +973,297 @@ async function showMatches() {
   const matches = await getTournaments();
 
   app.innerHTML = pageShell(`
-    <main style="padding:18px 16px 90px;">
-      <h2>All Matches</h2>
+    <main style="
+      padding:18px 16px 100px;
+      max-width:760px;
+      margin:auto;
+    ">
 
-      ${
-        matches.length
-        ? matches.map(matchCard).join("")
-        : `
-          <div style="
-            background:#101521;
-            border:1px solid #202838;
-            border-radius:14px;
-            padding:25px;
-            text-align:center;
-            color:#8f9bb0;
-          ">
-            এখনো কোনো tournament publish করা হয়নি।
-          </div>
-        `
-      }
+      <!-- HEADER -->
+      <div style="
+        margin-bottom:15px;
+      ">
+
+        <div style="
+          color:#718097;
+          font-size:11px;
+          font-weight:800;
+          letter-spacing:1.4px;
+          margin-bottom:5px;
+        ">
+          RENIT MATCHES
+        </div>
+
+        <h2 style="
+          margin:0;
+          font-size:25px;
+        ">
+          🎮 All Matches
+        </h2>
+
+      </div>
+
+
+      <!-- SEARCH -->
+      <div style="
+        background:#101521;
+        border:1px solid #263044;
+        border-radius:16px;
+        padding:14px;
+        margin-bottom:12px;
+      ">
+
+        <input
+          id="matchSearch"
+          type="text"
+          placeholder="🔎 Search tournament..."
+          oninput="filterMatches()"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #29364d;
+            border-radius:11px;
+            padding:13px;
+            outline:none;
+            font-size:13px;
+          "
+        >
+
+
+        <div style="
+          display:grid;
+          grid-template-columns:1fr 1fr;
+          gap:10px;
+          margin-top:10px;
+        ">
+
+          <select
+            id="matchGameFilter"
+            onchange="filterMatches()"
+            style="
+              width:100%;
+              box-sizing:border-box;
+              background:#111722;
+              color:white;
+              border:1px solid #29364d;
+              border-radius:11px;
+              padding:12px;
+              outline:none;
+              font-size:12px;
+            "
+          >
+            <option value="">All Games</option>
+            <option value="BR MATCH">BR MATCH</option>
+            <option value="BR-DUO">BR-DUO</option>
+            <option value="FREE FIRE">FREE FIRE</option>
+            <option value="CS 4 VS 4">CS 4 VS 4</option>
+            <option value="LONE WOLF">LONE WOLF</option>
+            <option value="SPECIAL MATCH">SPECIAL MATCH</option>
+            <option value="CUSTOM 2VS2 HEADSHOOT">CUSTOM 2VS2 HEADSHOOT</option>
+            <option value="LONE WOLF HEADSHOOT">LONE WOLF HEADSHOOT</option>
+            <option value="LOST TO WIN">LOST TO WIN</option>
+            <option value="FREE MATCH">FREE MATCH</option>
+          </select>
+
+
+          <select
+            id="matchStatusFilter"
+            onchange="filterMatches()"
+            style="
+              width:100%;
+              box-sizing:border-box;
+              background:#111722;
+              color:white;
+              border:1px solid #29364d;
+              border-radius:11px;
+              padding:12px;
+              outline:none;
+              font-size:12px;
+            "
+          >
+            <option value="">All Status</option>
+            <option value="upcoming">Upcoming</option>
+            <option value="live">Live</option>
+            <option value="completed">Completed</option>
+          </select>
+
+        </div>
+
+      </div>
+
+
+      <!-- RESULT COUNT -->
+      <div id="matchResultCount" style="
+        color:#718097;
+        font-size:11px;
+        margin:0 2px 10px;
+      ">
+        ${esc(matches.length)} tournament${matches.length === 1 ? "" : "s"}
+      </div>
+
+
+      <!-- MATCH LIST -->
+      <div id="matchList">
+
+        ${
+          matches.length
+            ? matches.map(matchCard).join("")
+            : `
+              <div style="
+                background:#101521;
+                border:1px solid #263044;
+                border-radius:15px;
+                padding:25px;
+                text-align:center;
+                color:#8f9bb0;
+              ">
+                এখনো কোনো tournament publish করা হয়নি।
+              </div>
+            `
+        }
+
+      </div>
+
     </main>
   `);
-    matches.forEach(tournament => {
+
+
+  window.__renitMatches = matches;
+
+
+  matches.forEach(tournament => {
     startTournamentCountdown(tournament);
   });
 }
+function filterMatches() {
+  const matches = window.__renitMatches || [];
 
+  const search =
+    String(
+      document.getElementById("matchSearch")?.value || ""
+    )
+      .trim()
+      .toLowerCase();
+
+  const gameFilter =
+    String(
+      document.getElementById("matchGameFilter")?.value || ""
+    )
+      .trim()
+      .toLowerCase();
+
+  const statusFilter =
+    String(
+      document.getElementById("matchStatusFilter")?.value || ""
+    )
+      .trim()
+      .toLowerCase();
+
+
+  const filtered = matches.filter(tournament => {
+
+    const title =
+      String(
+        tournamentTitle(tournament) || ""
+      ).toLowerCase();
+
+    const game =
+      String(
+        tournamentGame(tournament) || ""
+      ).toLowerCase();
+
+    const status =
+      String(
+        tournament.status || "upcoming"
+      ).toLowerCase();
+
+
+    const matchesSearch =
+      !search ||
+      title.includes(search) ||
+      game.includes(search);
+
+
+    const matchesGame =
+      !gameFilter ||
+      game === gameFilter;
+
+
+    const matchesStatus =
+      !statusFilter ||
+      status === statusFilter;
+
+
+    return (
+      matchesSearch &&
+      matchesGame &&
+      matchesStatus
+    );
+  });
+
+
+  const list =
+    document.getElementById("matchList");
+
+  const count =
+    document.getElementById("matchResultCount");
+
+
+  if (!list) return;
+
+
+  list.innerHTML =
+    filtered.length
+      ? filtered.map(matchCard).join("")
+      : `
+        <div style="
+          background:#101521;
+          border:1px solid #263044;
+          border-radius:15px;
+          padding:25px 18px;
+          text-align:center;
+        ">
+
+          <div style="
+            font-size:28px;
+            margin-bottom:8px;
+          ">
+            🔎
+          </div>
+
+          <div style="
+            font-size:15px;
+            font-weight:700;
+          ">
+            No tournaments found
+          </div>
+
+          <div style="
+            color:#718097;
+            font-size:12px;
+            margin-top:5px;
+          ">
+            Search বা filter পরিবর্তন করে আবার চেষ্টা করুন।
+          </div>
+
+        </div>
+      `;
+
+
+  if (count) {
+    count.textContent =
+      `${filtered.length} tournament${
+        filtered.length === 1 ? "" : "s"
+      } found`;
+  }
+
+
+  filtered.forEach(tournament => {
+    startTournamentCountdown(tournament);
+  });
+}
 async function showGameMatches(game) {
   const matches = await getTournaments(game);
 
