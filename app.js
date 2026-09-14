@@ -2645,22 +2645,50 @@ async function openWallet() {
 
 
         <div style="
-          background:#0d131d;
-          border:1px solid #202b3d;
-          border-radius:12px;
-          padding:12px;
-          margin-top:14px;
-          color:#9ba6b8;
-          font-size:12px;
-          line-height:1.6;
-        ">
-          bKash অথবা Nagad দিয়ে payment করার পর
-          Transaction ID এখানে submit করুন।
-          <br>
-          <span style="color:#718097;">
-            Admin approval-এর পর balance যোগ হবে।
-          </span>
-        </div>
+  background:#0d131d;
+  border:1px solid #30415d;
+  border-radius:14px;
+  padding:16px;
+  margin-top:14px;
+  text-align:center;
+">
+
+  <div style="
+    color:#718097;
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:1px;
+    margin-bottom:8px;
+  ">
+    SEND MONEY
+  </div>
+
+  <div style="
+    font-size:20px;
+    font-weight:900;
+    color:white;
+  ">
+    bKash / Nagad
+  </div>
+
+  <div style="
+    font-size:25px;
+    font-weight:900;
+    margin-top:5px;
+    letter-spacing:1px;
+  ">
+    01954732101
+  </div>
+
+  <div style="
+    color:#9ba6b8;
+    font-size:12px;
+    margin-top:5px;
+  ">
+    Send Money
+  </div>
+
+</div>
 
 
         <!-- Payment Method -->
@@ -2728,6 +2756,39 @@ async function openWallet() {
         </div>
 
 
+        <!-- Mobile Number -->
+<div style="
+  margin-top:11px;
+">
+
+  <div style="
+    color:#718097;
+    font-size:10px;
+    font-weight:800;
+    margin-bottom:6px;
+  ">
+    MOBILE NUMBER
+  </div>
+
+  <input
+    id="depositMobileNumber"
+    type="tel"
+    inputmode="numeric"
+    placeholder="Enter your mobile number"
+    style="
+      width:100%;
+      box-sizing:border-box;
+      background:#111722;
+      color:white;
+      border:1px solid #29364d;
+      border-radius:11px;
+      padding:13px;
+      outline:none;
+    "
+  >
+
+</div>
+        
         <!-- Transaction ID -->
         <div style="
           margin-top:11px;
