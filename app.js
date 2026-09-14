@@ -2622,6 +2622,27 @@ async function openWallet() {
           Your current RENIT wallet balance
         </div>
 
+      <div style="
+  margin-top:15px;
+">
+  <button
+    onclick="openWithdrawalForm()"
+    style="
+      width:100%;
+      background:#1e293b;
+      color:white;
+      border:1px solid #3b4a63;
+      border-radius:11px;
+      padding:13px;
+      font-size:14px;
+      font-weight:800;
+      cursor:pointer;
+    "
+  >
+    💸 Withdraw Money
+  </button>
+</div>
+
       </div>
 
 
@@ -2990,7 +3011,223 @@ async function openWallet() {
   await loadDepositRequests();
   await loadTransactionHistory();
 }
+function openWithdrawalForm() {
+  const box = document.getElementById("withdrawMessage");
 
+  if (box) {
+    box.innerHTML = `
+      <div style="
+        margin-top:14px;
+        padding:14px;
+        background:#0d131d;
+        border:1px solid #30415d;
+        border-radius:14px;
+      ">
+
+        <div style="
+          font-size:16px;
+          font-weight:800;
+          color:white;
+          margin-bottom:12px;
+        ">
+          💸 Withdraw Money
+        </div>
+
+        <div style="
+          color:#9ba6b8;
+          font-size:12px;
+          line-height:1.5;
+          margin-bottom:12px;
+        ">
+          Minimum withdrawal amount is ৳50.
+        </div>
+
+        <div style="
+          color:#718097;
+          font-size:10px;
+          font-weight:800;
+          margin-bottom:6px;
+        ">
+          WITHDRAW METHOD
+        </div>
+
+        <select
+          id="withdrawMethod"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #29364d;
+            border-radius:11px;
+            padding:13px;
+            outline:none;
+          "
+        >
+          <option value="bKash">bKash</option>
+          <option value="Nagad">Nagad</option>
+        </select>
+
+        <div style="
+          margin-top:11px;
+          color:#718097;
+          font-size:10px;
+          font-weight:800;
+          margin-bottom:6px;
+        ">
+          MOBILE NUMBER
+        </div>
+
+        <input
+          id="withdrawMobileNumber"
+          type="tel"
+          inputmode="numeric"
+          placeholder="Enter your mobile number"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #29364d;
+            border-radius:11px;
+            padding:13px;
+            outline:none;
+          "
+        >
+
+        <div style="
+          margin-top:11px;
+          color:#718097;
+          font-size:10px;
+          font-weight:800;
+          margin-bottom:6px;
+        ">
+          AMOUNT
+        </div>
+
+        <input
+          id="withdrawAmount"
+          type="number"
+          min="50"
+          placeholder="Enter amount (Minimum ৳50)"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            background:#111722;
+            color:white;
+            border:1px solid #29364d;
+            border-radius:11px;
+            padding:13px;
+            outline:none;
+          "
+        >
+
+        <button
+          onclick="submitWithdrawalRequest()"
+          style="
+            width:100%;
+            margin-top:13px;
+            background:#1e293b;
+            color:white;
+            border:1px solid #3b4a63;
+            border-radius:11px;
+            padding:13px;
+            font-size:14px;
+            font-weight:800;
+          "
+        >
+          Submit Withdrawal Request
+        </button>
+
+        <button
+          onclick="closeWithdrawalForm()"
+          style="
+            width:100%;
+            margin-top:8px;
+            background:transparent;
+            color:#94a3b8;
+            border:1px solid #29364d;
+            border-radius:11px;
+            padding:11px;
+            font-size:13px;
+            font-weight:700;
+          "
+        >
+          Cancel
+        </button>
+
+      </div>
+    `;
+  }
+}
+async function submitWithdrawalRequest() {
+  if (!currentUser) {
+    loginPage();
+    return;
+  }
+
+  const method =
+    document.getElementById("withdrawMethod").value;
+
+  const mobileNumber =
+    document
+      .getElementById("withdrawMobileNumber")
+      .value
+      .trim();
+
+  const amount =
+    Number(
+      document.getElementById("withdrawAmount").value
+    );
+
+  const box =
+    document.getElementById("withdrawMessage");
+
+  if (!mobileNumber) {
+    box.textContent = "Mobile number দিন।";
+    return;
+  }
+
+  if (!amount || amount < 50) {
+    box.textContent =
+      "Minimum withdrawal amount ৳50.";
+    return;
+  }
+
+  box.textContent =
+    "Withdrawal request submit হচ্ছে...";
+
+  const { data, error } =
+    await db.rpc(
+      "submit_withdrawal_request",
+      {
+        p_method: method,
+        p_mobile_number: mobileNumber,
+        p_amount: amount
+      }
+    );
+
+  if (error) {
+    console.log(error);
+
+    box.textContent =
+      "Withdrawal request submit করা যায়নি: " +
+      error.message;
+
+    return;
+  }
+
+  box.textContent =
+    `Withdrawal request submitted successfully. Amount: ৳${amount}. Admin approval-এর অপেক্ষায় আছে।`;
+
+  document.getElementById(
+    "withdrawMobileNumber"
+  ).value = "";
+
+  document.getElementById(
+    "withdrawAmount"
+  ).value = "";
+}
 async function showProfile() {
   currentProfile = await loadProfile();
 
