@@ -2236,133 +2236,352 @@ async function openWallet() {
   currentProfile = await loadProfile();
 
   app.innerHTML = pageShell(`
-    <main style="padding:18px 16px 90px;">
-      <h2>Wallet</h2>
+    <main style="
+      padding:18px 16px 100px;
+      max-width:700px;
+      margin:auto;
+    ">
 
+      <!-- Header -->
       <div style="
-        background:#101521;
-        border:1px solid #202838;
-        border-radius:16px;
-        padding:22px;
+        margin-bottom:16px;
       ">
-        <div style="color:#8f9bb0;font-size:13px;">
-          Available Balance
+        <div style="
+          color:#718097;
+          font-size:11px;
+          font-weight:800;
+          letter-spacing:1.4px;
+          margin-bottom:5px;
+        ">
+          RENIT WALLET
+        </div>
+
+        <h2 style="
+          margin:0;
+          font-size:25px;
+        ">
+          💰 Wallet
+        </h2>
+      </div>
+
+
+      <!-- Balance -->
+      <div style="
+        background:
+          radial-gradient(
+            circle at top right,
+            #29446c 0%,
+            transparent 48%
+          ),
+          linear-gradient(145deg,#17243a,#0d141f);
+        border:1px solid #304666;
+        border-radius:20px;
+        padding:22px;
+        margin-bottom:14px;
+        box-shadow:0 12px 30px rgba(0,0,0,.25);
+      ">
+
+        <div style="
+          color:#91a0b5;
+          font-size:11px;
+          font-weight:700;
+          letter-spacing:.7px;
+        ">
+          AVAILABLE BALANCE
         </div>
 
         <div style="
-          font-size:34px;
-          font-weight:800;
+          font-size:36px;
+          font-weight:900;
           margin-top:7px;
         ">
           ৳${esc(currentProfile?.balance ?? 0)}
         </div>
-      </div>
-
-      <div style="
-        margin-top:15px;
-        background:#101521;
-        border:1px solid #202838;
-        border-radius:14px;
-        padding:16px;
-      ">
-        <h3 style="margin-top:0;">Deposit</h3>
 
         <div style="
+          color:#718097;
+          font-size:12px;
+          margin-top:7px;
+        ">
+          Your current RENIT wallet balance
+        </div>
+
+      </div>
+
+
+      <!-- Deposit -->
+      <div style="
+        background:#101521;
+        border:1px solid #263044;
+        border-radius:17px;
+        padding:17px;
+        margin-bottom:14px;
+      ">
+
+        <div style="
+          display:flex;
+          align-items:center;
+          gap:10px;
+          margin-bottom:8px;
+        ">
+
+          <div style="
+            width:38px;
+            height:38px;
+            border-radius:11px;
+            background:#1a2536;
+            border:1px solid #2d3c55;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:19px;
+          ">
+            💳
+          </div>
+
+          <div>
+            <div style="
+              font-size:18px;
+              font-weight:800;
+            ">
+              Deposit Money
+            </div>
+
+            <div style="
+              color:#718097;
+              font-size:11px;
+              margin-top:2px;
+            ">
+              Add balance to your tournament wallet
+            </div>
+          </div>
+
+        </div>
+
+
+        <div style="
+          background:#0d131d;
+          border:1px solid #202b3d;
+          border-radius:12px;
+          padding:12px;
+          margin-top:14px;
           color:#9ba6b8;
-          font-size:13px;
-          line-height:1.5;
+          font-size:12px;
+          line-height:1.6;
         ">
           bKash অথবা Nagad দিয়ে payment করার পর
           Transaction ID এখানে submit করুন।
+          <br>
+          <span style="color:#718097;">
+            Admin approval-এর পর balance যোগ হবে।
+          </span>
         </div>
 
-        <select id="depositMethod" style="
-          width:100%;
-          box-sizing:border-box;
-          background:#111722;
-          color:white;
-          border:1px solid #293346;
-          border-radius:10px;
-          padding:13px;
-          margin-top:12px;
+
+        <!-- Payment Method -->
+        <div style="
+          margin-top:14px;
         ">
-          <option value="bKash">bKash</option>
-          <option value="Nagad">Nagad</option>
-        </select>
 
-        <input
-          id="depositAmount"
-          type="number"
-          min="10"
-          placeholder="Deposit amount"
-          style="
+          <div style="
+            color:#718097;
+            font-size:10px;
+            font-weight:800;
+            margin-bottom:6px;
+          ">
+            PAYMENT METHOD
+          </div>
+
+          <select id="depositMethod" style="
             width:100%;
             box-sizing:border-box;
             background:#111722;
             color:white;
-            border:1px solid #293346;
-            border-radius:10px;
+            border:1px solid #29364d;
+            border-radius:11px;
             padding:13px;
-            margin-top:10px;
             outline:none;
-          "
-        >
+          ">
+            <option value="bKash">bKash</option>
+            <option value="Nagad">Nagad</option>
+          </select>
 
-        <input
-          id="depositTransactionId"
-          type="text"
-          placeholder="Transaction ID"
-          style="
-            width:100%;
-            box-sizing:border-box;
-            background:#111722;
-            color:white;
-            border:1px solid #293346;
-            border-radius:10px;
-            padding:13px;
-            margin-top:10px;
-            outline:none;
-          "
-        >
+        </div>
+
+
+        <!-- Amount -->
+        <div style="
+          margin-top:11px;
+        ">
+
+          <div style="
+            color:#718097;
+            font-size:10px;
+            font-weight:800;
+            margin-bottom:6px;
+          ">
+            AMOUNT
+          </div>
+
+          <input
+            id="depositAmount"
+            type="number"
+            min="10"
+            placeholder="Enter deposit amount"
+            style="
+              width:100%;
+              box-sizing:border-box;
+              background:#111722;
+              color:white;
+              border:1px solid #29364d;
+              border-radius:11px;
+              padding:13px;
+              outline:none;
+            "
+          >
+
+        </div>
+
+
+        <!-- Transaction ID -->
+        <div style="
+          margin-top:11px;
+        ">
+
+          <div style="
+            color:#718097;
+            font-size:10px;
+            font-weight:800;
+            margin-bottom:6px;
+          ">
+            TRANSACTION ID
+          </div>
+
+          <input
+            id="depositTransactionId"
+            type="text"
+            placeholder="Enter Transaction ID"
+            style="
+              width:100%;
+              box-sizing:border-box;
+              background:#111722;
+              color:white;
+              border:1px solid #29364d;
+              border-radius:11px;
+              padding:13px;
+              outline:none;
+            "
+          >
+
+        </div>
+
 
         ${primaryBtn(
           "Submit Deposit Request",
           "submitDepositRequest()"
         )}
 
+
         <div id="depositMessage" style="
-          margin-top:12px;
+          margin-top:11px;
           color:#9ba6b8;
-          font-size:13px;
+          font-size:12px;
           line-height:1.5;
         "></div>
+
       </div>
 
+
+      <!-- Deposit Requests -->
       <div style="
-        margin-top:15px;
         background:#101521;
-        border:1px solid #202838;
-        border-radius:14px;
-        padding:16px;
+        border:1px solid #263044;
+        border-radius:17px;
+        padding:17px;
+        margin-bottom:14px;
       ">
-        <h3 style="margin-top:0;">Deposit Requests</h3>
+
+        <div style="
+          display:flex;
+          align-items:center;
+          gap:9px;
+          margin-bottom:13px;
+        ">
+
+          <div style="font-size:19px;">
+            📋
+          </div>
+
+          <div>
+            <div style="
+              font-size:17px;
+              font-weight:800;
+            ">
+              Deposit Requests
+            </div>
+
+            <div style="
+              color:#718097;
+              font-size:11px;
+              margin-top:2px;
+            ">
+              Your recent deposit requests
+            </div>
+          </div>
+
+        </div>
+
         <div id="depositRequests">
           Loading...
         </div>
-      </div>
-      <div style="
-  margin-top:15px;
-  background:#101521;
-  border:1px solid #202838;
-  border-radius:14px;
-  padding:16px;
-">
-  <h3 style="margin-top:0;">Transaction History</h3>
 
-  <div id="transactionHistory">
-    Loading...
-  </div>
-</div>
+      </div>
+
+
+      <!-- Transaction History -->
+      <div style="
+        background:#101521;
+        border:1px solid #263044;
+        border-radius:17px;
+        padding:17px;
+      ">
+
+        <div style="
+          display:flex;
+          align-items:center;
+          gap:9px;
+          margin-bottom:13px;
+        ">
+
+          <div style="font-size:19px;">
+            🧾
+          </div>
+
+          <div>
+            <div style="
+              font-size:17px;
+              font-weight:800;
+            ">
+              Transaction History
+            </div>
+
+            <div style="
+              color:#718097;
+              font-size:11px;
+              margin-top:2px;
+            ">
+              Your wallet activity
+            </div>
+          </div>
+
+        </div>
+
+        <div id="transactionHistory">
+          Loading...
+        </div>
+
+      </div>
+
     </main>
   `);
 
