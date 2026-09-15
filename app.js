@@ -30,6 +30,12 @@ const db = window.supabaseClient;
 
 let currentUser = null;
 let currentProfile = null;
+let deferredInstallPrompt = null;
+
+window.addEventListener("beforeinstallprompt", event => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+});
 
 const games = [
   "BR MATCH",
@@ -315,9 +321,18 @@ function loginPage() {
       justify-content:center;
     ">
       <div style="width:100%;max-width:420px;">
+
         <div style="text-align:center;margin-bottom:25px;">
-          <div style="font-size:34px;font-weight:900;">RENIT</div>
-          <div style="color:#8892a5;margin-top:5px;">TOURNAMENT</div>
+          <div style="font-size:34px;font-weight:900;">
+            RENIT
+          </div>
+
+          <div style="
+            color:#8892a5;
+            margin-top:5px;
+          ">
+            TOURNAMENT
+          </div>
         </div>
 
         <div style="
@@ -326,7 +341,10 @@ function loginPage() {
           border-radius:16px;
           padding:20px;
         ">
-          <h2 style="margin-top:0;">Login</h2>
+
+          <h2 style="margin-top:0;">
+            Login
+          </h2>
 
           ${inputField("email","loginEmail","Email")}
           ${inputField("password","loginPassword","Password")}
@@ -341,7 +359,9 @@ function loginPage() {
             color:#cbd3e1;
             border:1px solid #293346;
             border-radius:10px;
-          ">Create Account</button>
+          ">
+            Create Account
+          </button>
 
           <div id="authMessage" style="
             margin-top:14px;
@@ -349,12 +369,144 @@ function loginPage() {
             font-size:13px;
             text-align:center;
           "></div>
+
         </div>
+
+        <!-- INSTALL APP -->
+        <div style="
+          margin-top:14px;
+          background:#101a2a;
+          border:1px solid #2b4162;
+          border-radius:16px;
+          padding:16px;
+          text-align:center;
+        ">
+
+          <div style="
+            font-size:22px;
+            margin-bottom:6px;
+          ">
+            📱
+          </div>
+
+          <div style="
+            font-size:16px;
+            font-weight:900;
+            color:white;
+          ">
+            Install RENIT App
+          </div>
+
+          <div style="
+            color:#8892a5;
+            font-size:11px;
+            margin-top:5px;
+            line-height:1.5;
+          ">
+            Install RENIT on your phone for
+            faster and easier access.
+          </div>
+
+          <button
+            id="installAppButton"
+            onclick="installRENITApp()"
+            style="
+              width:100%;
+              margin-top:12px;
+              padding:12px;
+              background:#1d4ed8;
+              color:white;
+              border:1px solid #3b82f6;
+              border-radius:10px;
+              font-size:13px;
+              font-weight:800;
+            "
+          >
+            📲 Install App
+          </button>
+
+          <div id="installAppMessage" style="
+            margin-top:8px;
+            color:#718097;
+            font-size:10px;
+          "></div>
+
+        </div>
+
       </div>
     </div>
   `;
+
+  updateInstallButton();
 }
 
+async function installRENITApp() {
+  if (!deferredInstallPrompt) {
+    const msg =
+      document.getElementById("installAppMessage");
+
+    if (msg) {
+      msg.textContent =
+        "Chrome menu থেকে Install App নির্বাচন করুন।";
+    }
+
+    return;
+  }
+
+  deferredInstallPrompt.prompt();
+
+  const result =
+    await deferredInstallPrompt.userChoice;
+
+  if (result.outcome === "accepted") {
+    deferredInstallPrompt = null;
+  }
+
+  updateInstallButton();
+}
+
+function updateInstallButton() {
+  const button =
+    document.getElementById("installAppButton");
+
+  const message =
+    document.getElementById("installAppMessage");
+
+  if (!button) return;
+
+  if (deferredInstallPrompt) {
+    button.style.display = "block";
+
+    if (message) {
+      message.textContent =
+        "One tap to install RENIT.";
+    }
+
+    return;
+  }
+
+  if (
+    window.matchMedia(
+      "(display-mode: standalone)"
+    ).matches
+  ) {
+    button.style.display = "none";
+
+    if (message) {
+      message.textContent =
+        "RENIT is already installed.";
+    }
+
+    return;
+  }
+
+  button.style.display = "block";
+
+  if (message) {
+    message.textContent =
+      "If the button doesn't work, use Chrome menu → Install App.";
+  }
+}
 function signupPage() {
   app.innerHTML = `
     <div style="
