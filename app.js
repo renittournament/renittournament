@@ -34,7 +34,7 @@ let currentProfile = null;
 const games = [
   "BR MATCH",
   "BR-DUO",
-  "FREE FIRE",
+  "Custom Team vs Team Headshot",
   "CS 4 VS 4",
   "LONE WOLF",
   "SPECIAL MATCH",
