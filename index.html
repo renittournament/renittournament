@@ -39,6 +39,15 @@
 
   <!-- RENIT application -->
   <script src="app.js"></script>
+  <script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register(
+        "/renittournament/service-worker.js"
+      );
+    });
+  }
+</script>
 
 
 </body>
