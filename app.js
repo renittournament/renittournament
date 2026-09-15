@@ -2063,6 +2063,94 @@ async function joinTournament(id) {
     return;
   }
 
+  // Check tournament type
+  const { data: tournament, error: tournamentError } =
+    await db
+      .from("tournaments")
+      .select("id, game, title")
+      .eq("id", id)
+      .single();
+
+  if (tournamentError) {
+    console.log(tournamentError);
+    alert("Tournament information load করা যায়নি।");
+    return;
+  }
+
+  // Custom Team vs Team Headshot
+  if (
+    String(tournament.game || "").trim().toLowerCase() ===
+    "custom team vs team headshot"
+  ) {
+    const player1 = prompt("Player 1-এর Game Name লিখুন:");
+
+    if (player1 === null) return;
+
+    const player2 = prompt("Player 2-এর Game Name লিখুন:");
+
+    if (player2 === null) return;
+
+    const player3 = prompt("Player 3-এর Game Name লিখুন:");
+
+    if (player3 === null) return;
+
+    const player4 = prompt("Player 4-এর Game Name লিখুন:");
+
+    if (player4 === null) return;
+
+    const players = [
+      player1.trim(),
+      player2.trim(),
+      player3.trim(),
+      player4.trim()
+    ];
+
+    if (players.some(name => !name)) {
+      alert("সব ৪ জন Player-এর Game Name দিতে হবে।");
+      return;
+    }
+
+    if (players.some(name => name.length > 30)) {
+      alert("প্রতিটি Game Name সর্বোচ্চ 30 characters হতে পারবে।");
+      return;
+    }
+
+    const { data, error } =
+      await db.rpc(
+        "join_custom_team_tournament",
+        {
+          p_tournament_id: Number(id),
+          p_player_1: players[0],
+          p_player_2: players[1],
+          p_player_3: players[2],
+          p_player_4: players[3]
+        }
+      );
+
+    if (error) {
+      console.log(error);
+      alert(
+        "Team join করা যায়নি: " +
+        error.message
+      );
+      return;
+    }
+
+    alert(
+      `Team registered successfully!\n\n` +
+      `Player 1: ${players[0]}\n` +
+      `Player 2: ${players[1]}\n` +
+      `Player 3: ${players[2]}\n` +
+      `Player 4: ${players[3]}\n\n` +
+      `Entry Fee: ৳${data.fee}\n` +
+      `Remaining Balance: ৳${data.balance}`
+    );
+
+    await openMatch(id);
+    return;
+  }
+
+  // All other tournaments remain Solo / existing system
   const gameName = prompt("আপনার Game Name লিখুন:");
 
   if (gameName === null) {
@@ -2077,26 +2165,35 @@ async function joinTournament(id) {
   }
 
   if (cleanGameName.length > 30) {
-    alert("Game Name সর্বোচ্চ 30 characters হতে পারবে।");
+    alert(
+      "Game Name সর্বোচ্চ 30 characters হতে পারবে।"
+    );
     return;
   }
 
-  const { data, error } = await db.rpc(
-    "join_tournament",
-    {
-      p_tournament_id: id,
-      p_game_name: cleanGameName
-    }
-  );
+  const { data, error } =
+    await db.rpc(
+      "join_tournament",
+      {
+        p_tournament_id: id,
+        p_game_name: cleanGameName
+      }
+    );
 
   if (error) {
     console.log(error);
-    alert("Join করা যায়নি: " + error.message);
+    alert(
+      "Join করা যায়নি: " +
+      error.message
+    );
     return;
   }
 
   alert(
-    `Tournament joined successfully!\nGame Name: ${cleanGameName}\nEntry Fee: ৳${data.fee}\nRemaining Balance: ৳${data.balance}`
+    `Tournament joined successfully!\n` +
+    `Game Name: ${cleanGameName}\n` +
+    `Entry Fee: ৳${data.fee}\n` +
+    `Remaining Balance: ৳${data.balance}`
   );
 
   await openMatch(id);
