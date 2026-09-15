@@ -3487,6 +3487,22 @@ async function showProfile() {
 
       </div>
 
+      <!-- ADMIN -->
+      ${
+        admin
+          ? `
+            <div style="
+              margin-top:15px;
+            ">
+              ${primaryBtn(
+                "⚙️ Admin Panel",
+                "openAdmin()"
+              )}
+            </div>
+          `
+          : ""
+      }
+
 
       <!-- WALLET -->
       <div style="
@@ -3942,21 +3958,7 @@ async function showProfile() {
       </div>
 
 
-      <!-- ADMIN -->
-      ${
-        admin
-          ? `
-            <div style="
-              margin-top:15px;
-            ">
-              ${primaryBtn(
-                "⚙️ Admin Panel",
-                "openAdmin()"
-              )}
-            </div>
-          `
-          : ""
-      }
+      
 
 
       <!-- EDIT PROFILE -->
