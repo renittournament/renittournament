@@ -1836,6 +1836,27 @@ async function openMatch(id) {
     statusText = "✅ COMPLETED";
   }
 
+  /*
+    Check whether current user already joined
+    this tournament.
+  */
+
+  let alreadyJoined = false;
+
+  if (currentUser) {
+    const { data: registration, error: registrationError } =
+      await db
+        .from("registrations")
+        .select("id")
+        .eq("tournament_id", Number(id))
+        .eq("user_id", currentUser.id)
+        .maybeSingle();
+
+    if (!registrationError && registration) {
+      alreadyJoined = true;
+    }
+  }
+
   let room = null;
 
   if (currentUser) {
@@ -1966,6 +1987,7 @@ async function openMatch(id) {
             ৳${esc(fee)}
           </div>
         </div>
+
 
         <div style="
           background:#111722;
@@ -2197,13 +2219,48 @@ async function openMatch(id) {
       ` : ""}
 
 
-      <!-- Join -->
-      ${primaryBtn(
+      <!-- Join Button -->
+
+      ${
         status === "completed"
-          ? "Tournament Completed"
-          : "Join Tournament",
-        `joinTournament('${esc(data.id)}')`
-      )}
+          ? `
+            <button disabled style="
+              width:100%;
+              border:0;
+              border-radius:12px;
+              padding:13px;
+              background:#263044;
+              color:#94a3b8;
+              font-size:15px;
+              font-weight:800;
+              cursor:not-allowed;
+            ">
+              Tournament Completed
+            </button>
+          `
+          : alreadyJoined
+            ? `
+              <button disabled style="
+                width:100%;
+                border:0;
+                border-radius:12px;
+                padding:13px;
+                background:#173b2b;
+                color:#4ade80;
+                font-size:15px;
+                font-weight:800;
+                cursor:not-allowed;
+              ">
+                ✓ JOINED
+              </button>
+            `
+            : `
+              ${primaryBtn(
+                "Join Tournament",
+                `joinTournament('${esc(data.id)}')`
+              )}
+            `
+      }
 
     </main>
   `);
