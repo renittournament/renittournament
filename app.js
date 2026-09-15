@@ -6344,54 +6344,124 @@ async function saveTournamentResult() {
     document.getElementById("resultPosition").value;
 
   const prizeAmount =
-    Number(document.getElementById("resultPrizeAmount").value);
+    Number(
+      document.getElementById("resultPrizeAmount").value
+    );
 
   const msg =
     document.getElementById("resultSaveMessage");
 
   if (!tournamentId) {
-    msg.textContent = "Tournament select করুন।";
+    msg.textContent =
+      "Tournament select করুন।";
     return;
   }
 
   if (!playerId) {
-    msg.textContent = "Player select করুন।";
+    msg.textContent =
+      "Player select করুন।";
     return;
   }
 
   if (!position) {
-    msg.textContent = "Position select করুন।";
+    msg.textContent =
+      "Position select করুন।";
     return;
   }
 
-  if (prizeAmount < 0) {
-    msg.textContent = "Prize amount ভুল।";
+  if (
+    !Number.isFinite(prizeAmount) ||
+    prizeAmount < 0
+  ) {
+    msg.textContent =
+      "Prize amount ভুল।";
     return;
   }
 
-  msg.textContent = "Result save হচ্ছে...";
+  /*
+    Check tournament status before saving.
+    Result can only be saved after match completion.
+  */
 
-  const { data, error } = await db.rpc(
-    "save_tournament_result",
-    {
-      p_tournament_id: Number(tournamentId),
-      p_user_id: playerId,
-      p_position: Number(position),
-      p_prize_amount: prizeAmount
-    }
-  );
+  const { data: tournament, error: tournamentError } =
+    await db
+      .from("tournaments")
+      .select("id, status, start_time")
+      .eq("id", Number(tournamentId))
+      .maybeSingle();
+
+  if (tournamentError || !tournament) {
+    console.log(tournamentError);
+
+    msg.textContent =
+      "Tournament information load করা যায়নি।";
+
+    return;
+  }
+
+  const status =
+    String(tournament.status || "")
+      .trim()
+      .toLowerCase();
+
+  if (status !== "completed") {
+    msg.textContent =
+      "Match completed না হওয়া পর্যন্ত result দেওয়া যাবে না।";
+
+    return;
+  }
+
+  msg.textContent =
+    "Result save হচ্ছে...";
+
+  const { data, error } =
+    await db.rpc(
+      "save_tournament_result",
+      {
+        p_tournament_id:
+          Number(tournamentId),
+
+        p_user_id:
+          playerId,
+
+        p_position:
+          Number(position),
+
+        // IMPORTANT:
+        // Supabase RPC parameter is p_prize
+        p_prize:
+          prizeAmount
+      }
+    );
 
   if (error) {
     console.log(error);
+
     msg.textContent =
-      "Save করা যায়নি: " + error.message;
+      "Save করা যায়নি: " +
+      error.message;
+
     return;
   }
 
   msg.textContent =
     "Tournament result successfully saved!";
 
-  document.getElementById("resultPrizeAmount").value = "";
+  document.getElementById(
+    "resultPrizeAmount"
+  ).value = "";
+
+  /*
+    Reload player/result information
+    after successful save.
+  */
+
+  if (
+    typeof loadResultPlayers ===
+    "function"
+  ) {
+    await loadResultPlayers();
+  }
 }
 async function publishTournamentRoom() {
   if (!(await isAdmin())) {
