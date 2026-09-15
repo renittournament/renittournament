@@ -1057,7 +1057,7 @@ async function showMatches() {
             <option value="">All Games</option>
             <option value="BR MATCH">BR MATCH</option>
             <option value="BR-DUO">BR-DUO</option>
-            <option value="FREE FIRE">FREE FIRE</option>
+            <option value="Custom Team vs Team Headshot">Custom Team vs Team Headshot</option>
             <option value="CS 4 VS 4">CS 4 VS 4</option>
             <option value="LONE WOLF">LONE WOLF</option>
             <option value="SPECIAL MATCH">SPECIAL MATCH</option>
