@@ -5371,31 +5371,39 @@ async function processWithdrawalRequest(
   await loadAdminWithdrawalRequests();
 }
 async function loadAdminTournamentPlayers() {
-  const select = document.getElementById("playersTournamentId");
-  const box = document.getElementById("adminTournamentPlayers");
+  const select =
+    document.getElementById("playersTournamentId");
+
+  const box =
+    document.getElementById("adminTournamentPlayers");
 
   if (!select || !box) return;
 
   const tournamentId = select.value;
 
   if (!tournamentId) {
-    box.innerHTML = "Select a tournament to view players.";
+    box.innerHTML =
+      "Select a tournament to view players.";
     return;
   }
 
   box.innerHTML = "Loading players...";
 
-  const { data, error } = await db.rpc(
-    "get_admin_tournament_players",
-    {
-      p_tournament_id: Number(tournamentId)
-    }
-  );
+  const { data, error } =
+    await db.rpc(
+      "get_admin_tournament_players",
+      {
+        p_tournament_id: Number(tournamentId)
+      }
+    );
 
   if (error) {
     console.log(error);
+
     box.innerHTML =
-      "Players load করা যায়নি: " + esc(error.message);
+      "Players load করা যায়নি: " +
+      esc(error.message);
+
     return;
   }
 
@@ -5411,8 +5419,54 @@ async function loadAdminTournamentPlayers() {
         No players joined this tournament yet.
       </div>
     `;
+
     return;
   }
+
+  /*
+    Group registrations.
+    Custom Team tournament = 4 players
+    Normal tournament = 1 player
+  */
+
+  const groups = [];
+
+  data.forEach(row => {
+    let group = groups.find(
+      item =>
+        item.registration_id ===
+        row.registration_id
+    );
+
+    if (!group) {
+      group = {
+        registration_id:
+          row.registration_id,
+
+        username:
+          row.username,
+
+        email:
+          row.email,
+
+        players: []
+      };
+
+      groups.push(group);
+    }
+
+    if (row.player_number) {
+      group.players.push({
+        number: row.player_number,
+        name: row.player_name
+      });
+    } else {
+      group.players.push({
+        number: 1,
+        name: row.player_name
+      });
+    }
+  });
 
   box.innerHTML = `
     <div style="
@@ -5420,85 +5474,100 @@ async function loadAdminTournamentPlayers() {
       color:#94a3b8;
       font-size:12px;
     ">
-      👥 Registered: ${data.length}
+      👥 Registered: ${groups.length}
     </div>
 
-    ${data.map((player, index) => `
-      <div style="
-        background:#0f172a;
-        border:1px solid #263247;
-        border-radius:9px;
-        padding:9px 10px;
-        margin-bottom:6px;
-      ">
+    ${groups.map((group, index) => {
 
+      const isTeam =
+        group.players.length > 1;
+
+      return `
         <div style="
-          display:flex;
-          align-items:center;
-          gap:8px;
-          margin-bottom:6px;
+          background:#0f172a;
+          border:1px solid #263247;
+          border-radius:10px;
+          padding:11px;
+          margin-bottom:8px;
         ">
 
           <div style="
-            width:24px;
-            height:24px;
-            border-radius:50%;
-            background:#1e293b;
             display:flex;
             align-items:center;
-            justify-content:center;
-            font-size:11px;
-            font-weight:700;
-            flex-shrink:0;
+            gap:8px;
+            margin-bottom:9px;
           ">
-            ${index + 1}
+
+            <div style="
+              width:25px;
+              height:25px;
+              border-radius:50%;
+              background:#1e293b;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              font-size:11px;
+              font-weight:800;
+              flex-shrink:0;
+            ">
+              ${index + 1}
+            </div>
+
+            <div style="
+              font-size:13px;
+              font-weight:800;
+              color:white;
+            ">
+              ${isTeam
+                ? `👥 Team #${index + 1}`
+                : `👤 Player #${index + 1}`
+              }
+            </div>
+
           </div>
 
           <div style="
+            display:grid;
+            gap:5px;
             font-size:12px;
-            font-weight:700;
-            color:white;
           ">
-            Player #${index + 1}
+
+            ${group.players.map(player => `
+              <div style="
+                color:#cbd5e1;
+                word-break:break-word;
+              ">
+                🎮 <b>
+                  ${isTeam
+                    ? `Player ${player.number}`
+                    : "Game"
+                  }:
+                </b>
+                ${esc(player.name || "Not provided")}
+              </div>
+            `).join("")}
+
+            <div style="
+              color:#cbd5e1;
+              word-break:break-word;
+            ">
+              👤 <b>Registered by:</b>
+              ${esc(group.username || "Unknown")}
+            </div>
+
+            <div style="
+              color:#94a3b8;
+              word-break:break-all;
+            ">
+              📧 <b>Email:</b>
+              ${esc(group.email || "No email")}
+            </div>
+
           </div>
 
         </div>
-
-        <div style="
-          display:grid;
-          grid-template-columns:1fr;
-          gap:3px;
-          font-size:12px;
-        ">
-
-          <div style="
-            color:#cbd5e1;
-            word-break:break-word;
-          ">
-            🎮 <b>Game:</b>
-            ${esc(player.game_name || "Not provided")}
-          </div>
-
-          <div style="
-            color:#cbd5e1;
-            word-break:break-word;
-          ">
-            👤 <b>User:</b>
-            ${esc(player.username || "Unknown")}
-          </div>
-
-          <div style="
-            color:#94a3b8;
-            word-break:break-all;
-          ">
-            📧 <b>Email:</b>
-            ${esc(player.email || "No email")}
-          </div>
-
-        </div>
-
-      </div>
-    `).join("")}
+      `;
+    }).join("")}
   `;
 }
 async function loadPlayersTournamentList() {
