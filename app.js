@@ -5423,15 +5423,10 @@ async function loadAdminTournamentPlayers() {
     return;
   }
 
-  /*
-    Group registrations.
-    Custom Team tournament = 4 players
-    Normal tournament = 1 player
-  */
-
   const groups = [];
 
   data.forEach(row => {
+
     let group = groups.find(
       item =>
         item.registration_id ===
@@ -5455,17 +5450,15 @@ async function loadAdminTournamentPlayers() {
       groups.push(group);
     }
 
-    if (row.player_number) {
-      group.players.push({
-        number: row.player_number,
-        name: row.player_name
-      });
-    } else {
-      group.players.push({
-        number: 1,
-        name: row.player_name
-      });
-    }
+    group.players.push({
+      number:
+        row.player_number || 1,
+
+      name:
+        row.player_name ||
+        row.game_name ||
+        "Not provided"
+    });
   });
 
   box.innerHTML = `
@@ -5492,78 +5485,73 @@ async function loadAdminTournamentPlayers() {
         ">
 
           <div style="
-            display:flex;
-            align-items:center;
-            gap:8px;
-            margin-bottom:9px;
+            font-size:14px;
+            font-weight:800;
+            color:white;
+            margin-bottom:10px;
           ">
-
-            <div style="
-              width:25px;
-              height:25px;
-              border-radius:50%;
-              background:#1e293b;
-              display:flex;
-              align-items:center;
-              justify-content:center;
-              font-size:11px;
-              font-weight:800;
-              flex-shrink:0;
-            ">
-              ${index + 1}
-            </div>
-
-            <div style="
-              font-size:13px;
-              font-weight:800;
-              color:white;
-            ">
-              ${isTeam
-                ? `👥 Team #${index + 1}`
-                : `👤 Player #${index + 1}`
-              }
-            </div>
-
+            ${isTeam
+              ? `👥 Team #${index + 1}`
+              : `👤 Player #${index + 1}`
+            }
           </div>
 
-          <div style="
-            display:grid;
-            gap:5px;
-            font-size:12px;
-          ">
-
-            ${group.players.map(player => `
-              <div style="
-                color:#cbd5e1;
-                word-break:break-word;
-              ">
-                🎮 <b>
-                  ${isTeam
-                    ? `Player ${player.number}`
-                    : "Game"
-                  }:
-                </b>
-                ${esc(player.name || "Not provided")}
-              </div>
-            `).join("")}
-
+          ${group.players.map(player => `
             <div style="
-              color:#cbd5e1;
-              word-break:break-word;
+              background:#111827;
+              border:1px solid #263247;
+              border-radius:8px;
+              padding:9px 10px;
+              margin-bottom:6px;
+              color:#e2e8f0;
+              font-size:13px;
+              font-weight:700;
             ">
-              👤 <b>Registered by:</b>
+              🎮
+              ${isTeam
+                ? `Player ${player.number}:`
+                : "Game:"
+              }
+              ${esc(player.name)}
+            </div>
+          `).join("")}
+
+          ${isTeam ? `
+            <div style="
+              margin-top:8px;
+              color:#94a3b8;
+              font-size:11px;
+            ">
+              👤 Registered by:
               ${esc(group.username || "Unknown")}
             </div>
 
             <div style="
-              color:#94a3b8;
+              margin-top:3px;
+              color:#718097;
+              font-size:11px;
               word-break:break-all;
             ">
-              📧 <b>Email:</b>
-              ${esc(group.email || "No email")}
+              📧 ${esc(group.email || "No email")}
+            </div>
+          ` : `
+            <div style="
+              margin-top:6px;
+              color:#cbd5e1;
+              font-size:12px;
+            ">
+              👤 ${esc(group.username || "Unknown")}
             </div>
 
-          </div>
+            <div style="
+              margin-top:3px;
+              color:#718097;
+              font-size:11px;
+              word-break:break-all;
+            ">
+              📧 ${esc(group.email || "No email")}
+            </div>
+          `}
 
         </div>
       `;
