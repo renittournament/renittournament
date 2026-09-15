@@ -6118,61 +6118,215 @@ async function loadResultPlayers() {
   const playerSelect =
     document.getElementById("resultPlayerId");
 
+  const msg =
+    document.getElementById("resultSaveMessage");
+
   if (!tournamentSelect || !playerSelect) return;
 
-  const tournamentId = tournamentSelect.value;
+  const tournamentId =
+    tournamentSelect.value;
 
   if (!tournamentId) {
     playerSelect.innerHTML =
       `<option value="">Select player</option>`;
+
     return;
   }
 
   playerSelect.innerHTML =
-    `<option value="">Loading players...</option>`;
+    `<option value="">Loading...</option>`;
 
-  const { data: registrations, error: regError } =
+  /*
+    RESULT RULE:
+
+    Upcoming  → Result unavailable
+    Live      → Result unavailable
+    Completed → Result available
+  */
+
+  const { data: tournament, error: tournamentError } =
     await db
-      .from("registrations")
-      .select("user_id")
-      .eq("tournament_id", Number(tournamentId));
+      .from("tournaments")
+      .select("id, title, game, status, start_time")
+      .eq("id", Number(tournamentId))
+      .maybeSingle();
 
-  if (regError) {
+  if (tournamentError || !tournament) {
     playerSelect.innerHTML =
-      `<option value="">Player load করা যায়নি</option>`;
+      `<option value="">Tournament load করা যায়নি</option>`;
+
     return;
   }
 
-  if (!registrations?.length) {
+  const status =
+    String(tournament.status || "")
+      .trim()
+      .toLowerCase();
+
+  const startTime =
+    tournament.start_time
+      ? new Date(tournament.start_time).getTime()
+      : 0;
+
+  const now = Date.now();
+
+  /*
+    Match-এর scheduled time এখনও আসেনি
+  */
+  if (startTime && now < startTime) {
     playerSelect.innerHTML =
-      `<option value="">কোনো player join করেনি</option>`;
+      `<option value="">
+        Match এখনও শুরু হয়নি
+      </option>`;
+
+    if (msg) {
+      msg.textContent =
+        "এই tournament-এর match time এখনও আসেনি। Result match শেষ হওয়ার পরে দেওয়া যাবে।";
+    }
+
     return;
   }
 
-  const userIds =
-    registrations.map(r => r.user_id);
+  /*
+    Match শুরু হলেও Completed না হলে
+    result দেওয়া যাবে না।
+  */
+  if (status !== "completed") {
+    playerSelect.innerHTML =
+      `<option value="">
+        Match এখনও completed নয়
+      </option>`;
+
+    if (msg) {
+      msg.textContent =
+        "Match শেষ করে Tournament Status = Completed করার পর result দিতে পারবেন।";
+    }
+
+    return;
+  }
+
+  /*
+    এখন শুধু Completed tournament-এর
+    registered players/team load হবে।
+  */
 
   const { data: players, error: playerError } =
-  await db.rpc(
-    "get_admin_tournament_players",
-    {
-      p_tournament_id: Number(tournamentId)
-    }
-  );
+    await db.rpc(
+      "get_admin_tournament_players",
+      {
+        p_tournament_id: Number(tournamentId)
+      }
+    );
 
   if (playerError) {
+    console.log(playerError);
+
     playerSelect.innerHTML =
-      `<option value="">Player load করা যায়নি</option>`;
+      `<option value="">
+        Player load করা যায়নি
+      </option>`;
+
     return;
   }
 
+  if (!players || players.length === 0) {
+    playerSelect.innerHTML =
+      `<option value="">
+        কোনো player join করেনি
+      </option>`;
+
+    return;
+  }
+
+  /*
+    Custom Team tournament-এ একই registration
+    থেকে 4টি player row আসে।
+
+    Result একবারই দিতে হবে,
+    তাই registration_id অনুযায়ী group করছি।
+  */
+
+  const groups = [];
+
+  players.forEach(player => {
+
+    let group =
+      groups.find(
+        item =>
+          item.registration_id ===
+          player.registration_id
+      );
+
+    if (!group) {
+      group = {
+        registration_id:
+          player.registration_id,
+
+        user_id:
+          player.user_id,
+
+        username:
+          player.username,
+
+        email:
+          player.email,
+
+        game:
+          player.game_name,
+
+        players: []
+      };
+
+      groups.push(group);
+    }
+
+    if (player.player_number) {
+      group.players.push({
+        number:
+          player.player_number,
+
+        name:
+          player.player_name ||
+          player.game_name ||
+          "Player"
+      });
+    }
+  });
+
   playerSelect.innerHTML =
-    `<option value="">Select player</option>` +
-    (players || []).map(p => `
-      <option value="${esc(p.user_id)}">
-        ${esc(p.username || p.email || "Player")}
-      </option>
-    `).join("");
+    `<option value="">Select player / team</option>` +
+
+    groups.map(group => {
+
+      const isTeam =
+        group.players.length > 1;
+
+      let label = "";
+
+      if (isTeam) {
+        label =
+          `👥 Team — ${group.players
+            .map(p => p.name)
+            .join(" / ")}`;
+      } else {
+        label =
+          `👤 ${group.players[0]?.name ||
+            group.game ||
+            group.username ||
+            "Player"}`;
+      }
+
+      return `
+        <option value="${esc(group.user_id)}">
+          ${esc(label)}
+        </option>
+      `;
+    }).join("");
+
+  if (msg) {
+    msg.textContent =
+      "Match completed. Result এখন save করা যাবে।";
+  }
 }
 async function saveTournamentResult() {
   if (!(await isAdmin())) {
